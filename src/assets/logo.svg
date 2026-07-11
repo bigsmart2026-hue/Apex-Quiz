@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <mask id="qCutout">
+      <rect width="120" height="120" fill="white" />
+      <path d="M54,49 C54,44 62,44 62,49 C62,54 58,55 58,59 L58,64" stroke="black" stroke-width="3" stroke-linecap="round" fill="none" />
+      <circle cx="58" cy="70" r="2" fill="black" />
+    </mask>
+  </defs>
+  <path d="M25,105 L55,22 L60,7 L65,22 C75,30 85,55 97,105 L87,105 C76,65 72,42 64,28 L58,50 L47,50 L35,105 Z" fill="#f59e0b" mask="url(#qCutout)" />
+  <polygon points="55,22 60,7 65,22" fill="#d97706" />
+  <path d="M87,82 C83,72 80,64 78,58" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" fill="none" />
+</svg>

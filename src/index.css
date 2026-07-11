@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-heading: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+html {
+  font-family: Inter, 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6,
+.font-heading {
+  font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.font-ui {
+  font-family: Inter, 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.text-caption {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: Inter, 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* Subtle dot-noise texture overlay */
+.noise-overlay::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: repeating-conic-gradient(#000 0% 25%, transparent 0% 50%) 0 0 / 2px 2px;
+}
+
+/* Tactile interactive feedback */
+.tactile {
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+.tactile:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+.tactile:active {
+  transform: scale(0.98);
+}
+
+/* Glassmorphism card base */
+.glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.75);
+  border-color: rgba(255, 255, 255, 0.06);
+}
