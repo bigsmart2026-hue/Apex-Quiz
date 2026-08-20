@@ -8,22 +8,20 @@ import OptionButton from './OptionButton';
  * @param {(index: number) => void} props.onSelect
  * @param {number} props.questionNumber
  * @param {number} props.totalQuestions
- * @param {number} props.direction
  */
-export default function QuestionCard({ question, selectedAnswer, onSelect, questionNumber, totalQuestions, direction }) {
+export default function QuestionCard({ question, selectedAnswer, onSelect, questionNumber, totalQuestions }) {
   const hasAnswered = selectedAnswer !== null;
 
   const variants = {
-    enter: (dir) => ({ x: dir > 0 ? 320 : -320, opacity: 0 }),
+    enter: { x: 320, opacity: 0 },
     center: { x: 0, opacity: 1 },
-    exit: (dir) => ({ x: dir > 0 ? -320 : 320, opacity: 0 }),
+    exit: { x: -320, opacity: 0 },
   };
 
   return (
-    <AnimatePresence mode="wait" custom={direction}>
+    <AnimatePresence mode="wait">
       <motion.div
         key={question.id}
-        custom={direction}
         variants={variants}
         initial="enter"
         animate="center"

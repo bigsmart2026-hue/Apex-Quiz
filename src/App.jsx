@@ -1,114 +1,126 @@
-import { useState, useEffect } from 'react';
-import { ThemeProvider, StyledEngineProvider } from '@mui/material/styles';
+import { Suspense, lazy, useEffect } from 'react';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { lightTheme, darkTheme } from './theme/muiTheme';
-import { useFirebaseAuth } from './hooks/useFirebaseAuth';
 import useQuizStore from './store/useQuizStore';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import CategorySelector from './components/CategorySelector';
-import QuizPage from './pages/QuizPage';
-import ResultsPage from './pages/ResultsPage';
-import LeaderboardPage from './pages/LeaderboardPage';
+import { useProfileStore } from './store/useProfileStore';
+import ProtectedRoute from './components/ProtectedRoute';
+import PageTransition from './components/PageTransition';
+import { Background } from './components/Background';
+import ToastHost from './components/ToastHost';
+
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const CategorySelector = lazy(() => import('./components/CategorySelector'));
+const QuizPage = lazy(() => import('./pages/QuizPage'));
+const ResultsPage = lazy(() => import('./pages/ResultsPage'));
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const ChallengesPage = lazy(() => import('./pages/ChallengesPage'));
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 export default function App() {
-  const { user, loginWithGoogle, loginWithEmail, registerWithEmail, logoutUser } = useFirebaseAuth();
   const theme = useQuizStore((s) => s.theme);
-  const category = useQuizStore((s) => s.category);
-  const isFinished = useQuizStore((s) => s.isFinished);
-  const fetchQuestions = useQuizStore((s) => s.fetchQuestions);
-  const setCategory = useQuizStore((s) => s.setCategory);
-  const reset = useQuizStore((s) => s.reset);
-
-  const [view, setView] = useState('categories');
-  const [authView, setAuthView] = useState('login');
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
-
-  useEffect(() => {
-    if (!ready) setReady(true);
-  }, [user]);
-
+  const user = useQuizStore((s) => s.user);
+  const location = useLocation();
   const muiTheme = theme === 'dark' ? darkTheme : lightTheme;
+  const loadProfile = useProfileStore((s) => s.loadProfile);
+  const clearProfile = useProfileStore((s) => s.clearProfile);
 
-  const handleCategorySelect = (selected) => {
-    setCategory(selected);
-    fetchQuestions(selected.apiId, selected.name);
-    setView('quiz');
-  };
-
-  const handleRestart = () => {
-    reset();
-    setView('categories');
-  };
-
-  const handleShowLeaderboard = () => {
-    setView('leaderboard');
-  };
-
-  const handleBackFromLeaderboard = () => {
-    if (isFinished) {
-      setView('results');
-    } else if (category) {
-      setView('quiz');
+  useEffect(() => {
+    if (user) {
+      loadProfile(user);
     } else {
-      setView('categories');
+      clearProfile();
     }
-  };
-
-  const bgStyle = {
-    backgroundImage: 'url(/andrey-metelev-DEuansgqjns-unsplash.jpg)',
-  };
+  }, [user, loadProfile, clearProfile]);
 
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={muiTheme}>
         <CssBaseline />
-        <div className="noise-overlay" />
-        <div
-          className="fixed inset-0 bg-fixed bg-cover bg-center -z-10"
-          style={bgStyle}
-        />
-        {!ready ? (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : !user ? (
-          authView === 'register' ? (
-            <RegisterPage
-              onRegister={registerWithEmail}
-              onGoogleLogin={loginWithGoogle}
-              onSwitchToLogin={() => setAuthView('login')}
-            />
-          ) : (
-            <LoginPage
-              onLogin={loginWithEmail}
-              onGoogleLogin={loginWithGoogle}
-              onSwitchToRegister={() => setAuthView('register')}
-            />
-          )
-        ) : (
-          <div className="min-h-screen bg-white/75 dark:bg-slate-950/75">
-            {view === 'leaderboard' && (
-              <LeaderboardPage onBack={handleBackFromLeaderboard} />
-            )}
-            {view === 'categories' && !category && (
-              <CategorySelector onSelect={handleCategorySelect} onLogout={logoutUser} />
-            )}
-            {view === 'quiz' && category && !isFinished && (
-              <QuizPage onShowLeaderboard={() => setView('leaderboard')} />
-            )}
-            {isFinished && view !== 'leaderboard' && (
-              <ResultsPage
-                onRestart={handleRestart}
-                onShowLeaderboard={handleShowLeaderboard}
+        <Background />
+        <ToastHost />
+        <Suspense fallback={<PageLoader />}>
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <CategorySelector />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
               />
-            )}
-          </div>
-        )}
+              <Route
+                path="/quiz"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <QuizPage />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/results"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <ResultsPage />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/leaderboard"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <LeaderboardPage />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <ProfilePage />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/challenges"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <ChallengesPage />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AnimatePresence>
+        </Suspense>
       </ThemeProvider>
     </StyledEngineProvider>
   );

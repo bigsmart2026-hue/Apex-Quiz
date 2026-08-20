@@ -1,11 +1,123 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ---------- Question banks ----------
     match /quizzes/{document} {
       allow read: if request.auth != null;
+      allow write: if false;
     }
-    match /results/{document} {
-      allow create: if request.auth != null;
+
+    // ---------- User profiles ----------
+    // Readable by any authenticated user (powers the leaderboard).
+    // Only the owner may create/update. XP, streaks and stats are
+    // delta-bounded so the client cannot trivially inflate them.
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == userId
+        && request.resource.data.xp == 0
+        && request.resource.data.currentStreak == 0
+        && request.resource.data.quizzesCompleted == 0;
+      allow update: if request.auth.uid == userId && (
+        // No-op normalization: migrates legacy profiles by filling missing
+        // fields (null-safe comparisons). Every counter must stay unchanged.
+        (request.resource.data.xp == (resource.data.xp ? resource.data.xp : 0)
+          && request.resource.data.weeklyXp == (resource.data.weeklyXp ? resource.data.weeklyXp : 0)
+          && request.resource.data.quizzesCompleted == (resource.data.quizzesCompleted ? resource.data.quizzesCompleted : 0)
+          && request.resource.data.questionsAnswered == (resource.data.questionsAnswered ? resource.data.questionsAnswered : 0)
+          && request.resource.data.correctAnswers == (resource.data.correctAnswers ? resource.data.correctAnswers : 0)
+          && request.resource.data.bestScorePct == (resource.data.bestScorePct ? resource.data.bestScorePct : 0)
+          && request.resource.data.currentStreak == (resource.data.currentStreak ? resource.data.currentStreak : 0)
+          && request.resource.data.longestStreak == (resource.data.longestStreak ? resource.data.longestStreak : 0)
+          && request.resource.data.achievements.size() == (resource.data.achievements ? resource.data.achievements.size() : 0))
+        ||
+        // Progress update: delta-bounded so the client cannot inflate stats
+        (request.resource.data.xp >= resource.data.xp
+          && request.resource.data.xp - resource.data.xp <= 340
+          && request.resource.data.quizzesCompleted == resource.data.quizzesCompleted + 1
+          && request.resource.data.questionsAnswered >= resource.data.questionsAnswered
+          && request.resource.data.questionsAnswered <= resource.data.questionsAnswered + 10
+          && request.resource.data.correctAnswers >= resource.data.correctAnswers
+          && request.resource.data.correctAnswers <= resource.data.correctAnswers + 10
+          && request.resource.data.bestScorePct >= resource.data.bestScorePct
+          && request.resource.data.bestScorePct <= 100
+          && request.resource.data.currentStreak >= 1
+          && request.resource.data.currentStreak <= resource.data.currentStreak + 1
+          && request.resource.data.longestStreak >= resource.data.longestStreak
+          && request.resource.data.weeklyXp >= resource.data.weeklyXp
+          && request.resource.data.weeklyXp - resource.data.weeklyXp <= 340
+          && request.resource.data.achievements.size() >= resource.data.achievements.size()
+          && request.resource.data.achievements.size() <= resource.data.achievements.size() + 2)
+      );
+      allow delete: if false;
+    }
+
+    // ---------- Quiz attempts ----------
+    // Deterministic doc id (`{uid}_{categoryId}_{date}`) means a second
+    // submission for the same quiz+day is an update, which is denied —
+    // this prevents replay/duplicate XP farming.
+    match /quizAttempts/{attemptId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= request.resource.data.total
+        && request.resource.data.total > 0
+        && request.resource.data.total <= 10
+        && request.resource.data.accuracyPct >= 0
+        && request.resource.data.accuracyPct <= 100;
+      allow update, delete: if false;
+    }
+
+    // ---------- Daily challenge attempts ----------
+    match /dailyChallengeAttempts/{attemptId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= request.resource.data.total
+        && request.resource.data.total > 0
+        && request.resource.data.total <= 10;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ---------- Friend challenges ----------
+    // Scores are immutable once set; participants may only write their own
+    // slot. Winner is derived from stored scores, never accepted from client.
+    match /challenges/{code} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.creatorId
+        && request.resource.data.status == 'open'
+        && request.resource.data.total >= 1
+        && request.resource.data.total <= 10;
+      allow update: if request.auth != null
+        && request.resource.data.code == resource.data.code
+        && request.resource.data.creatorId == resource.data.creatorId
+        && request.resource.data.categoryId == resource.data.categoryId
+        && request.resource.data.questions == resource.data.questions
+        && request.resource.data.total == resource.data.total
+        && (
+          // Opponent joins an open challenge
+          (request.auth.uid == request.resource.data.opponentId
+            && resource.data.status == 'open'
+            && request.resource.data.status == 'active'
+            && resource.data.opponentId == null)
+          ||
+          // Creator submits their score (once)
+          (request.auth.uid == resource.data.creatorId
+            && request.resource.data.creatorScore >= 0
+            && request.resource.data.creatorScore <= resource.data.total
+            && (resource.data.creatorScore == null
+                || request.resource.data.creatorScore == resource.data.creatorScore))
+          ||
+          // Opponent submits their score (once)
+          (request.auth.uid == resource.data.opponentId
+            && request.resource.data.opponentScore >= 0
+            && request.resource.data.opponentScore <= resource.data.total
+            && (resource.data.opponentScore == null
+                || request.resource.data.opponentScore == resource.data.opponentScore))
+        );
+      allow delete: if false;
     }
   }
 }

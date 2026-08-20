@@ -1,13 +1,17 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { fetchTriviaQuestions } from '../services/triviaApi';
-import { fetchQuiz, saveResult, getLeaderboard } from '../services/firestore.service';
+import { fetchQuiz } from '../services/firestore.service';
+import { recordQuizCompletion } from '../services/profile.service';
+import { submitChallengeScore } from '../services/challenge.service';
 import { questionBank } from '../utils/questionBank';
 import { TIMER_DURATION } from '../utils/constants';
+import { toDateKey } from '../utils/dates';
+import { getAccuracy } from '../utils/progression';
+import { toast } from './useToastStore';
+import { useProfileStore } from './useProfileStore';
 
-const storedTheme = typeof window !== 'undefined' ? localStorage.getItem('apex-theme') || 'light' : 'light';
-
-const useQuizStore = create((set, get) => ({
-  theme: storedTheme,
+const initialState = {
   user: null,
   isLoading: false,
   error: null,
@@ -15,161 +19,280 @@ const useQuizStore = create((set, get) => ({
   questions: [],
   currentIndex: 0,
   selectedAnswers: {},
+  answerTimes: {},
   score: 0,
   isFinished: false,
   timer: TIMER_DURATION,
+  startedAt: 0,
+  completionSummary: null,
+  challenge: null,
+  isDaily: false,
   leaderboard: [],
+  leaderboardTab: 'global',
+  leaderboardError: null,
+  savingResult: false,
+};
 
-  toggleTheme: () => {
-    const next = get().theme === 'light' ? 'dark' : 'light';
-    localStorage.setItem('apex-theme', next);
-    set({ theme: next });
-  },
+const normalizeBankKey = (categoryName) => {
+  const nameLower = categoryName.toLowerCase();
+  const bankMap = {
+    'relationship quiz': 'relationships',
+    'front-end development': 'frontend',
+    'back-end development': 'backend',
+    'current affairs': 'currentAffairs',
+  };
+  return bankMap[nameLower] || nameLower.replace(/[\s-]+/g, '');
+};
 
-  login: (user) => set({ user }),
-
-  logout: () => set({
-    user: null,
-    category: null,
-    questions: [],
+const applyQuestions = (set, questions, extra = {}) =>
+  set({
+    questions,
     currentIndex: 0,
     selectedAnswers: {},
+    answerTimes: {},
     score: 0,
     isFinished: false,
-    error: null,
     timer: TIMER_DURATION,
-    leaderboard: [],
-  }),
+    startedAt: Date.now(),
+    completionSummary: null,
+    error: null,
+    isLoading: false,
+    ...extra,
+  });
 
-  setCategory: (category) => set({ category }),
+const useQuizStore = create(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
-  /**
-   * Fetches questions for a given category. Tries the Open Trivia DB API first;
-   * on failure, falls back to the Firestore quizzes collection.
-   * @param {number} apiId - The Open Trivia DB category identifier
-   * @param {string} categoryName - The category name for Firestore fallback
-   * @returns {Promise<void>}
-   */
-  fetchQuestions: async (apiId, categoryName) => {
-    set({ isLoading: true, error: null, timer: TIMER_DURATION });
+      theme: 'light',
 
-    const loadFromFirestore = async () => {
-      try {
-        const quiz = await fetchQuiz(categoryName);
+      toggleTheme: () =>
+        set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
+
+      login: (user) => set({ user }),
+
+      logout: () => set({ ...initialState, theme: get().theme }),
+
+      setCategory: (category) => set({ category }),
+
+      setDailyChallenge: (category, questions) => {
+        set({ category, isDaily: true, challenge: null });
+        applyQuestions(set, questions);
+      },
+
+      startChallenge: (challenge, questions) => {
         set({
-          questions: quiz.questions,
-          isLoading: false,
-          currentIndex: 0,
-          selectedAnswers: {},
-          score: 0,
+          category: { id: challenge.categoryId, name: challenge.categoryName },
+          isDaily: false,
+          challenge,
         });
-      } catch (fallbackErr) {
-        set({ error: fallbackErr.message, isLoading: false });
-      }
-    };
+        applyQuestions(set, questions);
+      },
 
-    const loadFromLocalBank = () => {
-      const nameLower = categoryName.toLowerCase();
-      const bankMap = {
-        'relationship quiz': 'relationships',
-      };
-      const bankKey = bankMap[nameLower] || nameLower.replace(/[\s-]+/g, '');
-      const questions = questionBank[bankKey];
-      if (questions && questions.length > 0) {
-        set({
-          questions,
-          isLoading: false,
-          currentIndex: 0,
-          selectedAnswers: {},
-          score: 0,
-        });
-        return true;
-      }
-      return false;
-    };
+      clearChallenge: () => set({ challenge: null, isDaily: false }),
 
-    if (!apiId) {
-      if (loadFromLocalBank()) return;
-      return loadFromFirestore();
-    }
+      /**
+       * Loads questions for a category. Order: Open Trivia DB -> local bank -> Firestore.
+       */
+      fetchQuestions: async (apiId, categoryName) => {
+        set({ isLoading: true, error: null, timer: TIMER_DURATION, isDaily: false, challenge: null });
 
-    try {
-      const questions = await fetchTriviaQuestions(apiId);
-      set({ questions, isLoading: false, currentIndex: 0, selectedAnswers: {}, score: 0 });
-    } catch {
-      if (!loadFromLocalBank()) {
-        loadFromFirestore();
-      }
-    }
-  },
-
-  /**
-   * Records the user's selected answer for a question and increments score if correct.
-   * @param {string} questionId - The unique question identifier
-   * @param {number} optionIndex - The index of the selected option
-   */
-  selectAnswer: (questionId, optionIndex) => {
-    const { questions, selectedAnswers } = get();
-    if (selectedAnswers[questionId] !== undefined) return;
-
-    const question = questions.find((q) => q.id === questionId);
-    const isCorrect = question && question.correctAnswer === optionIndex;
-
-    set((state) => ({
-      selectedAnswers: { ...state.selectedAnswers, [questionId]: optionIndex },
-      score: isCorrect ? state.score + 1 : state.score,
-    }));
-  },
-
-  decrementTimer: () => {
-    const { timer } = get();
-    if (timer > 0) {
-      set({ timer: timer - 1 });
-    }
-  },
-
-  goToNext: () => {
-    const { questions, currentIndex, selectedAnswers, user, category } = get();
-    const isLast = currentIndex === questions.length - 1;
-
-    if (isLast) {
-      let finalScore = 0;
-      questions.forEach((q) => {
-        if (selectedAnswers[q.id] === q.correctAnswer) {
-          finalScore++;
+        if (apiId) {
+          try {
+            const questions = await fetchTriviaQuestions(apiId);
+            applyQuestions(set, questions);
+            return;
+          } catch {
+            // fall through to local bank / Firestore
+          }
         }
-      });
-      set({ isFinished: true, score: finalScore });
 
-      if (user && category) {
-        saveResult(user.uid, user.displayName, category.name, finalScore, questions.length)
-          .catch(() => {});
-      }
-    } else {
-      set({ currentIndex: currentIndex + 1, timer: TIMER_DURATION });
+        const bankKey = normalizeBankKey(categoryName);
+        const localBank = questionBank[bankKey];
+        if (localBank?.length) {
+          applyQuestions(set, localBank);
+          return;
+        }
+
+        try {
+          const quiz = await fetchQuiz(categoryName);
+          if (!quiz.questions?.length) throw new Error('No questions found for this category');
+          applyQuestions(set, quiz.questions);
+        } catch (err) {
+          set({ error: err.message || 'Failed to load questions', isLoading: false });
+        }
+      },
+
+      selectAnswer: (questionId, optionIndex) => {
+        const { questions, selectedAnswers } = get();
+        if (selectedAnswers[questionId] !== undefined) return;
+
+        const question = questions.find((q) => q.id === questionId);
+        const isCorrect = question?.correctAnswer === optionIndex;
+
+        set((state) => ({
+          selectedAnswers: { ...state.selectedAnswers, [questionId]: optionIndex },
+          answerTimes: { ...state.answerTimes, [questionId]: Date.now() },
+          score: isCorrect ? state.score + 1 : state.score,
+        }));
+      },
+
+      decrementTimer: () => {
+        const { timer } = get();
+        if (timer > 0) set({ timer: timer - 1 });
+      },
+
+      /**
+       * Advances the quiz. On the final question, finishes the quiz and
+       * records the completion (attempt doc + profile update) through
+       * the trusted profile service.
+       */
+      goToNext: async () => {
+        const { questions, currentIndex, selectedAnswers, user, category, startedAt, isDaily, challenge } = get();
+        const isLast = currentIndex === questions.length - 1;
+
+        if (!isLast) {
+          set({ currentIndex: currentIndex + 1, timer: TIMER_DURATION });
+          return;
+        }
+
+        const finalScore = questions.reduce(
+          (acc, q) => acc + (selectedAnswers[q.id] === q.correctAnswer ? 1 : 0),
+          0
+        );
+        const total = questions.length;
+        const timeTakenMs = startedAt ? Date.now() - startedAt : 0;
+        const avgAnswerSec = total > 0 ? timeTakenMs / 1000 / total : 0;
+
+        set({ isFinished: true, score: finalScore, savingResult: true });
+
+        try {
+          if (challenge) {
+            const isCreator = challenge.creatorId === user.uid;
+            await submitChallengeScore(challenge.code, user, {
+              score: finalScore,
+              total,
+              accuracyPct: getAccuracy(finalScore, total),
+            });
+
+            let myWon = false;
+            let opponentScore = null;
+            try {
+              const { getChallenge, resolveWinner } = await import('../services/challenge.service');
+              const updated = await getChallenge(challenge.code);
+              const winner = updated ? resolveWinner(updated) : null;
+              myWon = winner === (isCreator ? 'creator' : 'opponent');
+              opponentScore = isCreator ? updated?.opponentScore : updated?.creatorScore;
+            } catch {
+              // comparison unavailable — show neutral result
+            }
+
+            set({
+              completionSummary: {
+                xpGained: 0,
+                level: null,
+                leveledUp: false,
+                streak: null,
+                newAchievements: [],
+                accuracyPct: getAccuracy(finalScore, total),
+                timeTakenMs,
+                avgAnswerSec,
+                challenge: { ...challenge, won: myWon, opponentScore, myScore: finalScore },
+              },
+              savingResult: false,
+            });
+            return;
+          }
+
+          const summary = await recordQuizCompletion(user, category, {
+            score: finalScore,
+            total,
+            timeTakenMs,
+            avgAnswerSec,
+            isDaily,
+          });
+
+          set({
+            completionSummary: {
+              ...summary,
+              timeTakenMs,
+              avgAnswerSec,
+              totalAnswered: total,
+              correctAnswers: finalScore,
+              dateKey: toDateKey(),
+            },
+            savingResult: false,
+          });
+
+          useProfileStore.getState().applyCompletion(get().completionSummary);
+
+          if (summary.xpGained > 0) {
+            toast.success(
+              isDaily ? 'Daily challenge complete!' : 'Quiz complete!',
+              `+${summary.xpGained} XP${summary.leveledUp ? ` · Level ${summary.level} — ${summary.levelName}!` : ''}`
+            );
+          }
+          if (summary.newAchievements.length > 0) {
+            summary.newAchievements.forEach((id) => {
+              toast.achievement('Achievement unlocked', id.split('-').join(' '));
+            });
+          }
+        } catch (err) {
+          const alreadyPlayed = err.message === 'QUIZ_ALREADY_PLAYED';
+          set({
+            completionSummary: {
+              xpGained: 0,
+              level: null,
+              leveledUp: false,
+              streak: null,
+              newAchievements: [],
+              accuracyPct: getAccuracy(finalScore, total),
+              timeTakenMs,
+              avgAnswerSec,
+              totalAnswered: total,
+              correctAnswers: finalScore,
+              dateKey: toDateKey(),
+              error: alreadyPlayed
+                ? 'You already played this quiz today — no extra XP awarded.'
+                : 'Could not save your result. You can still review your answers.',
+            },
+            savingResult: false,
+          });
+        }
+      },
+
+      fetchLeaderboard: async (tab = 'global') => {
+        const { getGlobalLeaderboard, getWeeklyLeaderboard } = await import('../services/leaderboard.service');
+        set({ leaderboardError: null, leaderboardTab: tab });
+        try {
+          const entries = tab === 'weekly' ? await getWeeklyLeaderboard() : await getGlobalLeaderboard();
+          set({ leaderboard: entries });
+        } catch (err) {
+          console.error('[leaderboard] load failed:', err);
+          set({
+            leaderboard: [],
+            leaderboardError: err?.code === 'permission-denied'
+              ? 'Leaderboard access denied — deploy the Firestore security rules (firebase deploy --only firestore:rules).'
+              : 'Something went wrong while loading the leaderboard.',
+          });
+        }
+      },
+
+      clearLeaderboardError: () => set({ leaderboardError: null }),
+
+      reset: () =>
+        set({
+          ...initialState,
+          theme: get().theme,
+          user: get().user,
+        }),
+    }),
+    {
+      name: 'apex-quiz-storage',
+      partialize: (state) => ({ theme: state.theme }),
     }
-  },
-
-  fetchLeaderboard: async () => {
-    try {
-      const entries = await getLeaderboard();
-      set({ leaderboard: entries });
-    } catch {
-      set({ error: 'Failed to load leaderboard' });
-    }
-  },
-
-  reset: () => set({
-    category: null,
-    questions: [],
-    currentIndex: 0,
-    selectedAnswers: {},
-    score: 0,
-    isFinished: false,
-    error: null,
-    timer: TIMER_DURATION,
-    leaderboard: [],
-  }),
-}));
+  )
+);
 
 export default useQuizStore;
