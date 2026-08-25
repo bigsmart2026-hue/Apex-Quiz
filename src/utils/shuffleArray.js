@@ -6,3 +6,15 @@ export function shuffleArray(array) {
   }
   return shuffled;
 }
+
+/**
+ * Shuffles the options array within each question and updates correctAnswer
+ * to point to the new index of the correct option.
+ */
+export function shuffleQuestionOptions(questions) {
+  return questions.map((q) => {
+    const correctText = q.options[q.correctAnswer];
+    const shuffled = shuffleArray(q.options);
+    return { ...q, options: shuffled, correctAnswer: shuffled.indexOf(correctText) };
+  });
+}

@@ -63,6 +63,9 @@ export default function Navbar({ showLeaderboard = true }) {
     if (notif.type === 'challenge' && notif.challengeCode) {
       setSearchParams({ code: notif.challengeCode });
       navigate('/challenges');
+    } else if (notif.type === 'challenge-created' && notif.challengeCode) {
+      setSearchParams({ code: notif.challengeCode });
+      navigate('/challenges');
     }
   };
 
@@ -154,15 +157,31 @@ export default function Navbar({ showLeaderboard = true }) {
                           <div className="flex items-start gap-2.5">
                             <Swords className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm text-slate-900 dark:text-white">
-                                <span className="font-semibold">{notif.fromName}</span> challenged you to a quiz!
-                              </p>
-                              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                                {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
-                              </p>
-                              <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
-                                Tap to join
-                              </p>
+                              {notif.type === 'challenge-created' ? (
+                                <>
+                                  <p className="text-sm text-slate-900 dark:text-white">
+                                    Challenge sent to <span className="font-semibold">{notif.opponentName}</span>!
+                                  </p>
+                                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                                    {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
+                                  </p>
+                                  <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
+                                    Tap to view
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="text-sm text-slate-900 dark:text-white">
+                                    <span className="font-semibold">{notif.fromName}</span> challenged you to a quiz!
+                                  </p>
+                                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                                    {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
+                                  </p>
+                                  <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
+                                    Tap to join
+                                  </p>
+                                </>
+                              )}
                             </div>
                             {!notif.read && (
                               <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 mt-1.5" />

@@ -1,4 +1,4 @@
-import { Lightbulb, FlaskConical, Clapperboard, Music, Gamepad2, Globe, ScrollText, Cpu, Code, Server, Newspaper, Heart } from 'lucide-react';
+import { Lightbulb, FlaskConical, Clapperboard, Music, Gamepad2, Globe, ScrollText, Cpu, Code, Server, Newspaper, Heart, Shield, Megaphone, Palette, BarChart3, Smartphone } from 'lucide-react';
 
 /**
  * Category definitions.
@@ -18,4 +18,9 @@ export const categories = [
   { id: 'backend', name: 'Back-end Development', icon: Server },
   { id: 'current-affairs', name: 'Current Affairs', icon: Newspaper },
   { id: 'relationships', name: 'Relationship Quiz', icon: Heart },
+  { id: 'cybersecurity', name: 'Cybersecurity', icon: Shield },
+  { id: 'digital-marketing', name: 'Digital Marketing', icon: Megaphone },
+  { id: 'product-design', name: 'Product Design', icon: Palette },
+  { id: 'data-analytics', name: 'Data Analytics', icon: BarChart3 },
+  { id: 'mobile-app-dev', name: 'Mobile App Development', icon: Smartphone },
 ];

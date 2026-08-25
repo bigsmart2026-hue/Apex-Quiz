@@ -14,7 +14,7 @@ import Modal from '../components/ui/Modal';
 import { categories } from '../utils/categories';
 import { questionBank } from '../utils/questionBank';
 import { createChallenge } from '../services/challenge.service';
-import { sendChallengeNotification } from '../services/notification.service';
+import { sendChallengeNotification, sendChallengeCreatedNotification } from '../services/notification.service';
 import { challengeShareUrl } from '../utils/challengeCode';
 import { seededSample } from '../utils/dates';
 
@@ -34,6 +34,11 @@ const CATEGORY_TO_BANK = {
   backend: 'backend',
   'current-affairs': 'currentAffairs',
   relationships: 'relationships',
+  cybersecurity: 'cybersecurity',
+  'digital-marketing': 'digitalMarketing',
+  'product-design': 'productDesign',
+  'data-analytics': 'dataAnalytics',
+  'mobile-app-dev': 'mobileAppDev',
 };
 const bankCategories = categories.filter((c) => CATEGORY_TO_BANK[c.id]);
 const QUESTION_COUNTS = [5, 10];
@@ -108,6 +113,12 @@ export default function LeaderboardPage() {
           categoryName: category.name,
         }).catch(() => {});
       }
+
+      sendChallengeCreatedNotification(user.uid, {
+        challengeCode: code,
+        opponentName: challengeTarget?.displayName || 'Friend',
+        categoryName: category.name,
+      }).catch(() => {});
 
       setCreatedCode(code);
     } catch (err) {
@@ -261,7 +272,7 @@ export default function LeaderboardPage() {
                       <div className="relative flex-shrink-0">
                         <Avatar src={entry.photoURL} name={entry.displayName} size={32} />
                         <span
-                          className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-slate-800 ${
+                          className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-xl border-2 border-white dark:border-slate-800 ${
                             entry.isOnline ? 'bg-emerald-400' : 'bg-slate-300 dark:bg-slate-600'
                           }`}
                           title={entry.isOnline ? 'Online' : 'Offline'}

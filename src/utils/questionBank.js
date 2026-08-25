@@ -250,9 +250,329 @@ const currentAffairs = [
   },
 ];
 
+const cybersecurity = [
+  {
+    id: 'cy-0',
+    text: 'What does "phishing" refer to in cybersecurity?',
+    options: ['A type of malware', 'A social engineering attack to steal credentials', 'A network scanning tool', 'An encryption method'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'cy-1',
+    text: 'Which protocol encrypts data transmitted over the web?',
+    options: ['FTP', 'HTTP', 'HTTPS', 'SMTP'],
+    correctAnswer: 2,
+  },
+  {
+    id: 'cy-2',
+    text: 'What is a "firewall" primarily used for?',
+    options: ['Storing passwords', 'Monitoring and controlling network traffic', 'Compressing files', 'Running virtual machines'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'cy-3',
+    text: 'What does "VPN" stand for?',
+    options: ['Virtual Private Network', 'Very Protected Node', 'Verified Public Network', 'Virtual Proxy Network'],
+    correctAnswer: 0,
+  },
+  {
+    id: 'cy-4',
+    text: 'Which of these is a strong password practice?',
+    options: ['Using your birthdate', 'Using the same password everywhere', 'Using a passphrase with mixed characters', 'Using short dictionary words'],
+    correctAnswer: 2,
+  },
+  {
+    id: 'cy-5',
+    text: 'What is "ransomware"?',
+    options: ['Software that speeds up your computer', 'Malware that encrypts files and demands payment', 'A type of antivirus', 'A backup utility'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'cy-6',
+    text: 'What does "SQL injection" target?',
+    options: ['Network routers', 'Database queries through input fields', 'Email servers', 'Firewall rules'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'cy-7',
+    text: 'Which authentication method uses a code sent to your phone?',
+    options: ['Password only', 'Biometrics', 'Two-factor authentication (2FA)', 'Security question'],
+    correctAnswer: 2,
+  },
+  {
+    id: 'cy-8',
+    text: 'What is a "zero-day exploit"?',
+    options: ['An attack on a server with zero uptime', 'An attack using a vulnerability not yet patched', 'A virus that deletes all files', 'An attack with zero damage'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'cy-9',
+    text: 'What is the principle of "least privilege"?',
+    options: ['Give users maximum access for efficiency', 'Give users only the access they need to perform their job', 'Remove all user accounts', 'Allow anonymous access'],
+    correctAnswer: 1,
+  },
+];
+
+const digitalMarketing = [
+  {
+    id: 'dm-0',
+    text: 'What does "SEO" stand for?',
+    options: ['Social Engine Optimization', 'Search Engine Optimization', 'Site Engagement Optimization', 'Search Email Outreach'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'dm-1',
+    text: 'Which metric measures the percentage of visitors who leave after viewing one page?',
+    options: ['Conversion rate', 'Bounce rate', 'Click-through rate', 'Retention rate'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'dm-2',
+    text: 'What is "PPC" in digital advertising?',
+    options: ['Pay Per Click', 'Posted Product Content', 'Public Page Campaign', 'Post Production Content'],
+    correctAnswer: 0,
+  },
+  {
+    id: 'dm-3',
+    text: 'Which platform is primarily used for professional B2B marketing?',
+    options: ['TikTok', 'LinkedIn', 'Snapchat', 'Pinterest'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'dm-4',
+    text: 'What is a "CTA" on a landing page?',
+    options: ['Content Targeting Algorithm', 'Call To Action', 'Customer Tracking Agent', 'Campaign Total Analysis'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'dm-5',
+    text: 'What does "ROI" measure in marketing?',
+    options: ['Revenue In Output', 'Return On Investment', 'Rate Of Interaction', 'Reach Of Influence'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'dm-6',
+    text: 'What is "content marketing"?',
+    options: ['Buying ad space', 'Creating valuable content to attract and engage an audience', 'Sending spam emails', 'Hiring influencers exclusively'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'dm-7',
+    text: 'What is an "email open rate"?',
+    options: ['How fast emails load', 'The percentage of recipients who opened the email', 'The number of emails sent', 'The email bounce percentage'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'dm-8',
+    text: 'What does "A/B testing" involve?',
+    options: ['Testing two versions to see which performs better', 'Testing with group A only', 'Checking server A and B', 'Running two campaigns simultaneously with different budgets'],
+    correctAnswer: 0,
+  },
+  {
+    id: 'dm-9',
+    text: 'What is "retargeting" in digital marketing?',
+    options: ['Targeting new customers only', 'Showing ads to users who previously interacted with your brand', 'Setting new marketing targets', 'Changing your target audience'],
+    correctAnswer: 1,
+  },
+];
+
+const productDesign = [
+  {
+    id: 'pd-0',
+    text: 'What is a "wireframe" in product design?',
+    options: ['A final high-fidelity mockup', 'A low-fidelity visual layout showing structure', 'A 3D model of the product', 'A color palette guide'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'pd-1',
+    text: 'What does "UX" stand for?',
+    options: ['Universal Experience', 'User Experience', 'User Execution', 'Unified Extension'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'pd-2',
+    text: 'What is the purpose of a "user persona"?',
+    options: ['To define the product price', 'To represent a target user archetype based on research', 'To outline the tech stack', 'To list competitor features'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'pd-3',
+    text: 'What is "responsive design"?',
+    options: ['Design that only works on desktop', 'Design that adapts to different screen sizes and devices', 'Design with fast load times', 'Design with animations'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'pd-4',
+    text: 'What does "UI" stand for?',
+    options: ['Unified Interface', 'User Interface', 'Universal Integration', 'User Interaction'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'pd-5',
+    text: 'What is a "design system"?',
+    options: ['A single font choice', 'A collection of reusable components, guidelines, and standards', 'A prototyping tool only', 'A coding framework'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'pd-6',
+    text: 'What is "usability testing"?',
+    options: ['Testing server speed', 'Evaluating a product by having real users perform tasks', 'Checking code quality', 'A/B testing colors'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'pd-7',
+    text: 'What is the "F-pattern" in UX?',
+    options: ['A layout matching how users scan web content', 'A fishbone diagram for debugging', 'A type of navigation menu', 'A color gradient style'],
+    correctAnswer: 0,
+  },
+  {
+    id: 'pd-8',
+    text: 'What is "information architecture"?',
+    options: ['Server infrastructure design', 'Organizing and structuring content for usability', 'Database schema design', 'Network topology planning'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'pd-9',
+    text: 'What is a "prototype" used for?',
+    options: ['Final production deployment', 'Simulating the product to test interactions before development', 'Marketing the product', 'Storing design files'],
+    correctAnswer: 1,
+  },
+];
+
+const dataAnalytics = [
+  {
+    id: 'da-0',
+    text: 'What does "ETL" stand for in data pipelines?',
+    options: ['Extract, Transform, Load', 'Evaluate, Test, Launch', 'Encode, Transfer, Log', 'Extract, Translate, List'],
+    correctAnswer: 0,
+  },
+  {
+    id: 'da-1',
+    text: 'What is a "data warehouse"?',
+    options: ['A physical storage facility', 'A system for reporting and data analysis, storing structured data', 'A backup hard drive', 'A real-time messaging queue'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'da-2',
+    text: 'What is "data visualization"?',
+    options: ['Encrypting data', 'Representing data graphically to identify patterns', 'Deleting unused data', 'Compressing data files'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'da-3',
+    text: 'What does "KPI" stand for?',
+    options: ['Key Performance Indicator', 'Known Problem Index', 'Kernel Processing Input', 'Key Program Interface'],
+    correctAnswer: 0,
+  },
+  {
+    id: 'da-4',
+    text: 'What is "regression analysis" used for?',
+    options: ['Deleting old data', 'Estimating relationships between variables', 'Encrypting datasets', 'Creating backups'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'da-5',
+    text: 'What is the difference between "mean" and "median"?',
+    options: ['They are the same thing', 'Mean is the average, median is the middle value', 'Mean is for text, median is for numbers', 'Median is always higher'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'da-6',
+    text: 'What is "data cleansing"?',
+    options: ['Encrypting sensitive data', 'Detecting and correcting corrupt or inaccurate records', 'Deleting old databases', 'Creating data backups'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'da-7',
+    text: 'What is a "dashboard" in analytics?',
+    options: ['A login page', 'A visual display of key metrics and data in real time', 'A server monitoring tool', 'A file management system'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'da-8',
+    text: 'What does "SQL" allow you to do with databases?',
+    options: ['Design graphics', 'Query and manipulate structured data', 'Create websites', 'Send emails'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'da-9',
+    text: 'What is "cohort analysis"?',
+    options: ['Analyzing server logs', 'Grouping users by shared characteristics and tracking behavior over time', 'Running A/B tests', 'Measuring website speed'],
+    correctAnswer: 1,
+  },
+];
+
+const mobileAppDev = [
+  {
+    id: 'ma-0',
+    text: 'What is "React Native"?',
+    options: ['A native iOS framework', 'A framework for building cross-platform mobile apps with React', 'A database tool', 'A CSS preprocessor'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'ma-1',
+    text: 'What does "SDK" stand for?',
+    options: ['Software Development Kit', 'System Design Knowledge', 'Server Data Kernel', 'Standard Development Key'],
+    correctAnswer: 0,
+  },
+  {
+    id: 'ma-2',
+    text: 'Which language is primarily used for iOS app development?',
+    options: ['Java', 'Swift', 'Python', 'PHP'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'ma-3',
+    text: 'What is "Flutter"?',
+    options: ['A database management tool', 'A UI toolkit for building natively compiled apps from a single codebase', 'A testing framework', 'A cloud hosting service'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'ma-4',
+    text: 'What is "Kotlin" used for?',
+    options: ['Web styling only', 'Android app development (and other platforms)', 'Database queries', 'Operating system design'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'ma-5',
+    text: 'What is a "REST API" in mobile development?',
+    options: ['A休息 mode for devices', 'An interface for communication between app and server using HTTP', 'A type of animation', 'A local storage method'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'ma-6',
+    text: 'What is "push notification"?',
+    options: ['An email alert', 'A message sent to a user device even when the app is not open', 'A text message', 'An in-app popup'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'ma-7',
+    text: 'What is the "App Store" for iOS apps?',
+    options: ['A code editor', 'Apple\'s marketplace for distributing iOS applications', 'A cloud server', 'A design tool'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'ma-8',
+    text: 'What is "responsive" in mobile design?',
+    options: ['Fast app loading', 'UI adapting gracefully to different screen sizes', 'App that responds to voice commands', 'An app with many features'],
+    correctAnswer: 1,
+  },
+  {
+    id: 'ma-9',
+    text: 'What is "Firebase" commonly used for in mobile apps?',
+    options: ['Graphic design only', 'Backend services like auth, database, and notifications', 'Code compilation', 'Device hardware control'],
+    correctAnswer: 1,
+  },
+];
+
 export const questionBank = {
   relationships,
   frontend,
   backend,
   currentAffairs,
+  cybersecurity,
+  digitalMarketing,
+  productDesign,
+  dataAnalytics,
+  mobileAppDev,
 };

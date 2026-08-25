@@ -21,6 +21,11 @@ const CATEGORY_TO_BANK = {
   backend: 'backend',
   'current-affairs': 'currentAffairs',
   relationships: 'relationships',
+  cybersecurity: 'cybersecurity',
+  'digital-marketing': 'digitalMarketing',
+  'product-design': 'productDesign',
+  'data-analytics': 'dataAnalytics',
+  'mobile-app-dev': 'mobileAppDev',
 };
 
 const bankCategories = categories.filter((c) => CATEGORY_TO_BANK[c.id]);

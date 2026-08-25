@@ -6,7 +6,7 @@ import { recordQuizCompletion } from '../services/profile.service';
 import { submitChallengeScore } from '../services/challenge.service';
 import { questionBank } from '../utils/questionBank';
 import { TIMER_DURATION } from '../utils/constants';
-import { shuffleArray } from '../utils/shuffleArray';
+import { shuffleArray, shuffleQuestionOptions } from '../utils/shuffleArray';
 import { toDateKey } from '../utils/dates';
 import { getAccuracy } from '../utils/progression';
 import { toast } from './useToastStore';
@@ -41,13 +41,18 @@ const normalizeBankKey = (categoryName) => {
     'front-end development': 'frontend',
     'back-end development': 'backend',
     'current affairs': 'currentAffairs',
+    'cybersecurity': 'cybersecurity',
+    'digital marketing': 'digitalMarketing',
+    'product design': 'productDesign',
+    'data analytics': 'dataAnalytics',
+    'mobile app development': 'mobileAppDev',
   };
   return bankMap[nameLower] || nameLower.replace(/[\s-]+/g, '');
 };
 
 const applyQuestions = (set, questions, extra = {}) =>
   set({
-    questions: shuffleArray(questions),
+    questions: shuffleQuestionOptions(shuffleArray(questions)),
     currentIndex: 0,
     selectedAnswers: {},
     answerTimes: {},

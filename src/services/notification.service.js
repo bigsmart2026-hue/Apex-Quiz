@@ -23,6 +23,20 @@ export function sendChallengeNotification(targetUid, { fromUid, fromName, challe
 }
 
 /**
+ * Sends a challenge-created confirmation to the creator.
+ */
+export function sendChallengeCreatedNotification(creatorUid, { challengeCode, opponentName, categoryName }) {
+  return addDoc(notifsCol(creatorUid), {
+    type: 'challenge-created',
+    challengeCode,
+    opponentName,
+    categoryName,
+    read: false,
+    createdAt: serverTimestamp(),
+  });
+}
+
+/**
  * Subscribes to a user's notifications in real-time.
  * Returns an unsubscribe function.
  */
