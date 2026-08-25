@@ -110,7 +110,7 @@ export default function LoginPage() {
           <div className="w-full border-t border-slate-200 dark:border-slate-600" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-white/70 dark:bg-slate-800/50 px-3 text-slate-400 dark:text-slate-500">
+          <span className="bg-white/70 dark:bg-slate-800/50 px-3 text-slate-500 dark:text-slate-400">
             or continue with
           </span>
         </div>
@@ -126,7 +126,7 @@ export default function LoginPage() {
         Continue with Google
       </motion.button>
 
-      <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
+      <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
         Don&apos;t have an account?{' '}
         <button
           onClick={() => navigate('/register', { state: { from } })}

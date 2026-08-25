@@ -40,7 +40,7 @@ export default function ToastHost() {
               </div>
               <button
                 onClick={() => dismiss(toast.id)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer text-xs font-bold"
+                className="text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer text-xs font-bold"
                 aria-label="Dismiss notification"
               >
                 <X className="w-3 h-3" />

@@ -259,7 +259,7 @@ export default function LeaderboardPage() {
                         {podium ? (
                           podium.icon
                         ) : (
-                          <span className="text-sm font-bold text-slate-400 dark:text-slate-500 tabular-nums">
+                          <span className="text-sm font-bold text-slate-500 dark:text-slate-400 tabular-nums">
                             {index + 1}
                           </span>
                         )}
@@ -283,7 +283,7 @@ export default function LeaderboardPage() {
                       <Badge variant="slate">LVL {entry.level}</Badge>
                       <span className="text-sm font-bold text-slate-900 dark:text-white tabular-nums w-20 text-right">
                         {leaderboardTab === 'weekly' ? entry.weeklyXp : entry.xp}
-                        <span className="text-xs font-medium text-slate-500 dark:text-slate-500"> XP</span>
+                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400"> XP</span>
                       </span>
 
                       {!isCurrentUser && (

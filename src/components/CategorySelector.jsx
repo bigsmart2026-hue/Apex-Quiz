@@ -180,7 +180,7 @@ export default function CategorySelector() {
                         <p className="font-semibold text-slate-900 dark:text-white leading-tight truncate">
                           {category.name}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-500">
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
                           {QUESTIONS_PER_QUIZ} questions · {category.apiId ? 'Open Trivia' : 'Apex Bank'}
                         </p>
                       </div>

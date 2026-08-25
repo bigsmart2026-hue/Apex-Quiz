@@ -28,7 +28,7 @@ export default function TimerBar({ timer }) {
         sx={{
           height: 6,
           borderRadius: 3,
-          backgroundColor: 'rgba(148, 163, 184, 0.2)',
+          backgroundColor: 'rgba(203, 213, 225, 0.3)',
         }}
       />
     </div>

@@ -146,7 +146,7 @@ export default function Navbar({ showLeaderboard = true }) {
                     )}
                   </div>
                   {notifications.length === 0 ? (
-                    <div className="p-6 text-center text-sm text-slate-400 dark:text-slate-500">
+                    <div className="p-6 text-center text-sm text-slate-500 dark:text-slate-400">
                       No notifications yet
                     </div>
                   ) : (
@@ -170,7 +170,7 @@ export default function Navbar({ showLeaderboard = true }) {
                                     <p className="text-sm text-slate-900 dark:text-white">
                                       Challenge sent to <span className="font-semibold">{notif.opponentName}</span>!
                                     </p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                                       {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
                                     </p>
                                     <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
@@ -182,7 +182,7 @@ export default function Navbar({ showLeaderboard = true }) {
                                     <p className="text-sm text-slate-900 dark:text-white">
                                       <span className="font-semibold">{notif.fromName}</span> challenged you to a quiz!
                                     </p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                                       {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
                                     </p>
                                     <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">

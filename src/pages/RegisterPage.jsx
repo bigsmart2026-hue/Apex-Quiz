@@ -82,7 +82,7 @@ export default function RegisterPage() {
         <div>
           <label htmlFor="reg-name" className="sr-only">Full name</label>
           <div className="relative">
-            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-400 pointer-events-none" />
             <input
               id="reg-name"
               type="text"
@@ -99,7 +99,7 @@ export default function RegisterPage() {
         <div>
           <label htmlFor="reg-email" className="sr-only">Email address</label>
           <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-400 pointer-events-none" />
             <input
               id="reg-email"
               type="email"
@@ -116,7 +116,7 @@ export default function RegisterPage() {
         <div>
           <label htmlFor="reg-password" className="sr-only">Password</label>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-400 pointer-events-none" />
             <input
               id="reg-password"
               type={showPassword ? 'text' : 'password'}
@@ -131,7 +131,7 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setShowPassword((p) => !p)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
               tabIndex={-1}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
@@ -165,7 +165,7 @@ export default function RegisterPage() {
           <div className="w-full border-t border-slate-200 dark:border-slate-600" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-white/70 dark:bg-slate-800/50 px-3 text-slate-400 dark:text-slate-500">
+          <span className="bg-white/70 dark:bg-slate-800/50 px-3 text-slate-500 dark:text-slate-400">
             or continue with
           </span>
         </div>
@@ -186,7 +186,7 @@ export default function RegisterPage() {
         Continue with Google
       </motion.button>
 
-      <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
+      <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
         Already have an account?{' '}
         <button
           onClick={() => navigate('/login', { state: { from } })}

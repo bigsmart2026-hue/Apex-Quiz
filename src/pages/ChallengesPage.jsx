@@ -250,7 +250,7 @@ export default function ChallengesPage() {
               Done
             </Button>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-500">
+          <p className="text-xs text-slate-600 dark:text-slate-400">
             The challenge expires in 7 days. Winner takes the bragging rights.
           </p>
         </div>

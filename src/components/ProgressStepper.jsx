@@ -33,7 +33,7 @@ export default function ProgressStepper({ total, current }) {
                       className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
                         ${i === current
                           ? 'bg-amber-500 text-white'
-                          : 'bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400'
+                          : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
                         }`}
                     >
                       {i + 1}
