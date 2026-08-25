@@ -143,7 +143,7 @@ export default function ProfilePage() {
                     }`}
                   >
                     <div className={`text-2xl mb-2 ${unlocked ? '' : 'opacity-30 grayscale'}`} aria-hidden="true">
-                      {unlocked ? achievement.icon : <Lock className="w-6 h-6 text-slate-300 dark:text-slate-600 inline" />}
+                      {unlocked ? <achievement.Icon className="w-6 h-6 text-amber-500" /> : <Lock className="w-6 h-6 text-slate-300 dark:text-slate-600 inline" />}
                     </div>
                     <p className={`text-sm font-semibold ${unlocked ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
                       {achievement.title}

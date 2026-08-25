@@ -1,3 +1,4 @@
+import { Trophy, Target, Flame, Brain, Zap, Crosshair, Rocket, BookOpen, Medal, CalendarDays } from 'lucide-react';
 import { getLevel } from './progression';
 
 /**
@@ -9,61 +10,61 @@ export const ACHIEVEMENTS = [
     id: 'first-victory',
     title: 'First Victory',
     description: 'Complete your first quiz',
-    icon: '🏆',
+    Icon: Trophy,
   },
   {
     id: 'perfect-score',
     title: 'Perfect Score',
     description: 'Answer every question correctly in one quiz',
-    icon: '💯',
+    Icon: Target,
   },
   {
     id: 'streak-7',
     title: '7-Day Streak',
     description: 'Play on 7 consecutive days',
-    icon: '🔥',
+    Icon: Flame,
   },
   {
     id: 'questions-100',
     title: '100 Questions',
     description: 'Answer 100 questions in total',
-    icon: '🧠',
+    Icon: Brain,
   },
   {
     id: 'speed-demon',
     title: 'Speed Demon',
     description: 'Perfect quiz with under 4s average per question',
-    icon: '⚡',
+    Icon: Zap,
   },
   {
     id: 'accuracy-90',
     title: 'Sharp Shooter',
     description: 'Score 90% or higher in a quiz',
-    icon: '🎯',
+    Icon: Crosshair,
   },
   {
     id: 'level-5',
     title: 'Expert Tier',
     description: 'Reach Level 5 (Expert)',
-    icon: '🚀',
+    Icon: Rocket,
   },
   {
     id: 'category-master',
     title: 'Category Master',
     description: 'Reach 80% mastery in any category',
-    icon: '📚',
+    Icon: BookOpen,
   },
   {
     id: 'challenge-victor',
     title: 'Challenge Victor',
     description: 'Win a friend challenge',
-    icon: '🥇',
+    Icon: Medal,
   },
   {
     id: 'daily-challenge',
     title: 'Daily Grinder',
     description: 'Complete your first daily challenge',
-    icon: '🗓️',
+    Icon: CalendarDays,
   },
 ];
 

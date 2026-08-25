@@ -40,7 +40,6 @@ export default function App() {
   useEffect(() => {
     if (user) {
       loadProfile(user);
-      updateLastSeen(user.uid);
     } else {
       clearProfile();
     }

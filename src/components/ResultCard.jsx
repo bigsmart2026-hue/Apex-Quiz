@@ -54,7 +54,7 @@ export default function ResultCard({ question, selectedAnswer, index, expanded, 
                   : 'text-slate-400 dark:text-slate-500'
             }`}
           >
-            {isCorrect ? '✓ Correct' : answered ? '✕ Incorrect' : '— Not answered'}
+            {isCorrect ? <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Correct</span> : answered ? <span className="inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Incorrect</span> : '— Not answered'}
           </span>
         </span>
         <ChevronDown

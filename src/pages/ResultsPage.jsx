@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { RotateCcw, Flame, Timer, Target, Swords } from 'lucide-react';
+import { RotateCcw, Flame, Timer, Target, Swords, Award } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import useQuizStore from '../store/useQuizStore';
 import Navbar from '../components/Navbar';
@@ -128,7 +128,7 @@ export default function ResultsPage() {
               />
               <StatCard
                 label="Streak"
-                value={completionSummary?.streak != null ? `🔥 ${completionSummary.streak}` : '—'}
+                value={completionSummary?.streak != null ? `${completionSummary.streak} days` : '—'}
                 icon={<Flame className="w-5 h-5" />}
                 sub="days"
               />
@@ -151,7 +151,7 @@ export default function ResultsPage() {
                     key={id}
                     className="px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-semibold"
                   >
-                    🏆 {id.split('-').join(' ')}
+                    <span className="inline-flex items-center gap-1"><Award className="w-3.5 h-3.5" /> {id.split('-').join(' ')}</span>
                   </span>
                 ))}
               </div>

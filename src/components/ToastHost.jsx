@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, XCircle, Info, Award } from 'lucide-react';
+import { CheckCircle2, XCircle, Info, Award, X } from 'lucide-react';
 import { useToastStore } from '../store/useToastStore';
 
 const STYLE = {
@@ -43,7 +43,7 @@ export default function ToastHost() {
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer text-xs font-bold"
                 aria-label="Dismiss notification"
               >
-                ✕
+                <X className="w-3 h-3" />
               </button>
             </motion.div>
           );

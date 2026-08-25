@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Swords } from 'lucide-react';
+import { ArrowRight, Swords, Flame } from 'lucide-react';
 import { Skeleton, Snackbar, Alert } from '@mui/material';
 import { useShallow } from 'zustand/react/shallow';
 import useQuizStore from '../store/useQuizStore';
@@ -120,7 +120,7 @@ export default function QuizPage() {
                   Friend challenge · {challenge.categoryName}
                 </>
               ) : (
-                <>🔥 Daily challenge · 2x XP</>
+                <><Flame className="w-4 h-4" /> Daily challenge · 2x XP</>
               )}
             </div>
           )}

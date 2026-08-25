@@ -161,7 +161,7 @@ export default function Navbar({ showLeaderboard = true }) {
                                 {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
                               </p>
                               <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
-                                Tap to join →
+                                Tap to join
                               </p>
                             </div>
                             {!notif.read && (

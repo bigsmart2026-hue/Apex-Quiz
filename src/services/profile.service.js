@@ -10,9 +10,8 @@ import {
 import { evaluateNewAchievements } from '../utils/achievements';
 
 export const updateLastSeen = (uid) => {
-  return updateDoc(doc(db, USERS_COLLECTION, uid), {
-    lastSeen: serverTimestamp(),
-  }).catch(() => {});
+  const ref = doc(db, USERS_COLLECTION, uid);
+  return setDoc(ref, { lastSeen: serverTimestamp() }, { merge: true }).catch(() => {});
 };
 
 export const getOrCreateProfile = async (user) => {
@@ -40,6 +39,7 @@ export const getOrCreateProfile = async (user) => {
       await updateDoc(ref, patch);
     }
 
+    updateLastSeen(user.uid);
     return merged;
   }
 
@@ -51,6 +51,7 @@ export const getOrCreateProfile = async (user) => {
     createdAt: serverTimestamp(),
   };
   await setDoc(ref, fresh);
+  updateLastSeen(user.uid);
   return fresh;
 };
 

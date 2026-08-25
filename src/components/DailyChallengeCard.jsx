@@ -37,7 +37,7 @@ export default function DailyChallengeCard({ completedToday = false, streak = 0 
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {DAILY_QUESTION_COUNT} questions · 2x XP
-              {streak > 0 && ` · 🔥 ${streak} day streak`}
+              {streak > 0 && ` · ${streak} day streak`}
             </p>
           </div>
         </div>
