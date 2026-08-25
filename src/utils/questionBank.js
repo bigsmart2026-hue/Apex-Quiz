@@ -576,3 +576,26 @@ export const questionBank = {
   dataAnalytics,
   mobileAppDev,
 };
+
+/**
+ * Tags each question with a difficulty level (1-5) based on its position
+ * in the bank, then returns questions appropriate for the given level.
+ * Questions near the start are easier; later ones are harder.
+ * Returns a mix: questions from the current level ± 1.
+ */
+export function getQuestionsForLevel(questions, level) {
+  const tagged = questions.map((q, i) => {
+    const ratio = i / Math.max(questions.length - 1, 1);
+    let difficulty;
+    if (ratio < 0.2) difficulty = 1;
+    else if (ratio < 0.4) difficulty = 2;
+    else if (ratio < 0.6) difficulty = 3;
+    else if (ratio < 0.8) difficulty = 4;
+    else difficulty = 5;
+    return { ...q, difficulty };
+  });
+
+  const minDiff = Math.max(1, level - 1);
+  const maxDiff = Math.min(5, level + 1);
+  return tagged.filter((q) => q.difficulty >= minDiff && q.difficulty <= maxDiff);
+}

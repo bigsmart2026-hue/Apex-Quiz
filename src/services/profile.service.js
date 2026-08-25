@@ -6,6 +6,7 @@ import { USERS_COLLECTION, ATTEMPTS_COLLECTION, DAILY_ATTEMPTS_COLLECTION } from
 import { toDateKey, isYesterday, getWeekStartKey, weekChanged } from '../utils/dates';
 import {
   DEFAULT_PROFILE, computeQuizXp, getLevel, getLevelName, getAccuracy,
+  checkLevelUnlock,
 } from '../utils/progression';
 import { evaluateNewAchievements } from '../utils/achievements';
 
@@ -101,8 +102,13 @@ export async function recordQuizCompletion(user, category, params) {
         ? profile.currentStreak + 1
         : 1;
 
-    const xpGained = computeQuizXp({ score, total, isDaily, streak });
     const accuracyPct = getAccuracy(score, total);
+    const prevUnlockedLevel = profile.unlockedLevel || 1;
+    const { canUnlock, nextLevel } = checkLevelUnlock(prevUnlockedLevel, accuracyPct);
+    const levelCompleted = canUnlock && nextLevel !== null;
+    const newUnlockedLevel = levelCompleted ? nextLevel : prevUnlockedLevel;
+
+    const xpGained = computeQuizXp({ score, total, isDaily, streak, avgAnswerSec, levelCompleted });
     const prevLevel = getLevel(profile.xp);
     const newXp = profile.xp + xpGained;
     const newLevel = getLevel(newXp);
@@ -128,7 +134,7 @@ export async function recordQuizCompletion(user, category, params) {
         score, total, accuracyPct, avgAnswerSec,
         isDaily, isChallenge, wonChallenge,
         newStreak: streak, totalQuestionsAnswered: questionsAnswered,
-        level: newLevel, categoryMasteryPct: masteryPct,
+        level: newLevel, unlockedLevel: newUnlockedLevel, categoryMasteryPct: masteryPct,
       },
       profile.achievements || {}
     );
@@ -168,6 +174,7 @@ export async function recordQuizCompletion(user, category, params) {
       ...profile,
       displayName: user.displayName,
       xp: newXp,
+      unlockedLevel: newUnlockedLevel,
       currentStreak: streak,
       longestStreak: Math.max(profile.longestStreak || 0, streak),
       lastPlayedDate: todayKey,
@@ -187,6 +194,8 @@ export async function recordQuizCompletion(user, category, params) {
       level: newLevel,
       levelName: getLevelName(newXp),
       leveledUp: newLevel > prevLevel,
+      unlockedLevel: newUnlockedLevel,
+      levelCompleted,
       streak,
       newAchievements,
       accuracyPct,

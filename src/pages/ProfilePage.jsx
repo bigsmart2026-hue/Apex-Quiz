@@ -54,7 +54,7 @@ export default function ProfilePage() {
                 </h1>
                 <p className="text-sm text-slate-600 dark:text-slate-400">{user?.email}</p>
                 <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
-                  <Badge variant="amber">LVL {levelInfo.level} — {levelInfo.name}</Badge>
+                  <Badge variant="amber">Level {levelInfo.level} — {levelInfo.name}</Badge>
                   <Badge variant="emerald">
                     <Flame className="w-3.5 h-3.5" /> {profile.currentStreak} day streak
                   </Badge>

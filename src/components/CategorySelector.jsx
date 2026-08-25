@@ -65,7 +65,7 @@ export default function CategorySelector() {
                 Test your knowledge, earn XP and climb the leaderboard.
               </p>
             </div>
-            {profile && <LevelBadge level={levelInfo.level} name={levelInfo.name} xp={levelInfo.xp} progress={levelInfo.progress} />}
+            {profile && <LevelBadge level={levelInfo.level} name={levelInfo.name} description={levelInfo.description} minScorePct={levelInfo.minScorePct} xp={levelInfo.xp} />}
           </motion.section>
 
           {/* Stats */}

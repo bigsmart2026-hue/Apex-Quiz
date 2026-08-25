@@ -79,7 +79,7 @@ export default function Navbar({ showLeaderboard = true }) {
         <div className="flex items-center gap-2 sm:gap-4">
           {profile && (
             <Badge variant="amber" className="hidden md:inline-flex">
-              LVL {levelInfo.level} · {levelInfo.xp.toLocaleString()} XP
+              Level {levelInfo.level} · {levelInfo.xp.toLocaleString()} XP
             </Badge>
           )}
 
@@ -127,7 +127,7 @@ export default function Navbar({ showLeaderboard = true }) {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl z-50"
+                  className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-80 max-h-96 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl z-50"
                 >
                   <div className="p-3 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                     <span className="text-sm font-semibold text-slate-900 dark:text-white">Notifications</span>
@@ -147,49 +147,60 @@ export default function Navbar({ showLeaderboard = true }) {
                   ) : (
                     <div className="divide-y divide-slate-100 dark:divide-slate-700">
                       {notifications.map((notif) => (
-                        <button
+                        <div
                           key={notif.id}
-                          onClick={() => handleNotificationClick(notif)}
-                          className={`w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer ${
+                          className={`flex items-start gap-2 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
                             !notif.read ? 'bg-amber-50/50 dark:bg-amber-900/10' : ''
                           }`}
                         >
-                          <div className="flex items-start gap-2.5">
-                            <Swords className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              {notif.type === 'challenge-created' ? (
-                                <>
-                                  <p className="text-sm text-slate-900 dark:text-white">
-                                    Challenge sent to <span className="font-semibold">{notif.opponentName}</span>!
-                                  </p>
-                                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
-                                    {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
-                                  </p>
-                                  <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
-                                    Tap to view
-                                  </p>
-                                </>
-                              ) : (
-                                <>
-                                  <p className="text-sm text-slate-900 dark:text-white">
-                                    <span className="font-semibold">{notif.fromName}</span> challenged you to a quiz!
-                                  </p>
-                                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
-                                    {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
-                                  </p>
-                                  <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
-                                    Tap to join
-                                  </p>
-                                </>
-                              )}
+                          <button
+                            onClick={() => handleNotificationClick(notif)}
+                            className="flex-1 text-left cursor-pointer min-w-0"
+                          >
+                            <div className="flex items-start gap-2.5">
+                              <Swords className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                {notif.type === 'challenge-created' ? (
+                                  <>
+                                    <p className="text-sm text-slate-900 dark:text-white">
+                                      Challenge sent to <span className="font-semibold">{notif.opponentName}</span>!
+                                    </p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
+                                      {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
+                                    </p>
+                                    <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
+                                      Tap to view
+                                    </p>
+                                  </>
+                                ) : (
+                                  <>
+                                    <p className="text-sm text-slate-900 dark:text-white">
+                                      <span className="font-semibold">{notif.fromName}</span> challenged you to a quiz!
+                                    </p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
+                                      {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
+                                    </p>
+                                    <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
+                                      Tap to join
+                                    </p>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                            {!notif.read ? (
-                              <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 mt-1.5" />
-                            ) : (
-                              <Check className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0 mt-1" />
-                            )}
-                          </div>
-                        </button>
+                          </button>
+                          {!notif.read && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markNotificationRead(user.uid, notif.id).catch(() => {});
+                              }}
+                              className="flex-shrink-0 p-1 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors cursor-pointer mt-0.5"
+                              title="Mark as read"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       ))}
                     </div>
                   )}

@@ -1,12 +1,13 @@
 # Apex Quiz
 
-A premium, gamified quiz platform built with React 19, Firebase (Auth + Firestore), and Tailwind CSS v4. Timed quizzes across 12 categories with XP/levels, streaks, daily challenges, achievements, leaderboards, and head-to-head friend challenges.
+A premium, gamified quiz platform built with React 19, Firebase (Auth + Firestore), and Tailwind CSS v4. Timed quizzes across 17 categories with XP/levels, streaks, daily challenges, achievements, leaderboards, and head-to-head friend challenges.
 
 ## Features
 
 ### Core quiz
-- **12 Quiz Categories** — General Knowledge, Science, Movies, Music, Video Games, Geography, History, Technology, Front-end Development, Back-end Development, Current Affairs, Relationship Quiz
+- **17 Quiz Categories** — General Knowledge, Science, Movies, Music, Video Games, Geography, History, Technology, Front-end Development, Back-end Development, Current Affairs, Relationship Quiz, Cybersecurity, Digital Marketing, Product Design, Data Analytics, Mobile App Development
 - **Timed Questions** — 15-second timer per question with auto-advance and keyboard shortcuts (1–4 to answer, Enter to continue)
+- **Shuffled answers** — Answer options are randomized on every quiz attempt
 - **Question pipeline** — Open Trivia DB → local question bank → Firestore fallback
 - **Detailed review** — Collapsible per-question results with correct/incorrect/not-answered states
 
@@ -14,19 +15,31 @@ A premium, gamified quiz platform built with React 19, Firebase (Auth + Firestor
 - **XP & levels** — 7 tiers (Rookie → Apex); XP for correct answers, completion, perfect rounds, streak bonuses; daily challenges award 2× XP
 - **Daily streaks** — Consecutive-day tracking with bonus XP (capped), persisted via date-key logic
 - **Daily challenge** — One deterministic 10-question challenge per day (seeded by date), at most one completion per day (enforced server-side)
-- **Achievements** — 10 unlockable badges (first victory, perfect score, speed demon, 90%+ accuracy, 5/10/25-question milestones, daily streaks, mastery, level 5) surfaced via toasts and the profile grid
+- **Achievements** — 10 unlockable badges (first victory, perfect score, speed demon, 90%+ accuracy, daily streaks, mastery, level 5, challenge victor, daily grinder) surfaced via toasts and the profile grid with lucide icons
 - **Category mastery** — Per-category accuracy bars on the dashboard and profile
 - **Leaderboards** — Global (all-time XP) and Weekly (current-week XP) tabs with top-3 podium, your rank, and error/empty states
 
 ### Friend challenges
-- Create a challenge (category + 5 or 10 questions), share a 6-character code or direct link, opponent joins by code, both play the same question set, and the winner is derived from the stored immutable scores.
+- **Direct challenges** — Challenge a friend directly from the leaderboard; they get a notification and join instantly without entering a code
+- **Code challenges** — Create a challenge from the Challenges page, share the 6-character code or link, opponent joins by code
+- **Flexible sizing** — Choose 5, 10, or 20 questions per challenge
+- Both players get the same question set; winner is derived from stored immutable scores
+
+### Notifications
+- Real-time notification bell with unread count badge
+- Challenge notifications: direct challenge requests and challenge-created confirmations
+- Individual mark-as-read button on each notification
+- Mark all read button for bulk action
+- Responsive notification panel (full-width on mobile)
 
 ### Polish
 - Auth-gated routing with lazy-loaded route chunks (per-page code splitting)
 - Loading / error / empty states throughout; toasts for XP, level-ups and achievements
-- Dark/light mode persisted to localStorage
+- Dark/light mode persisted to localStorage with improved light-mode text contrast
+- Online/offline status indicator (amber dot when online, grey when offline) on leaderboard
 - Accessible primitives (focus states, aria labels, keyboard nav) and mobile-first responsive layout
 - Motion animations (Framer Motion) and confetti on high scores
+- All icons use lucide-react (no emoji)
 
 ## Tech Stack
 
@@ -79,19 +92,21 @@ npm run build        # production build
 
 | Collection | Document ID | Purpose |
 |------------|-------------|---------|
-| `users` | `{uid}` | Profile: XP, level (derived), streaks, weekly XP, stats, achievements map, categoryStats |
+| `users` | `{uid}` | Profile: XP, level (derived), streaks, weekly XP, stats, achievements map, categoryStats, lastSeen |
+| `users/{uid}/notifications` | auto-ID | Challenge requests, challenge-created confirmations, read/unread state |
 | `quizAttempts` | `{uid}_{categoryId}_{date}` | Immutable per-quiz result; deterministic ID blocks duplicate XP farming |
 | `dailyChallengeAttempts` | `{uid}_{date}` | Immutable daily-challenge completion marker (one per day) |
-| `challenges` | `{code}` | Friend challenge: creator/opponent, question snapshot, immutable scores |
+| `challenges` | `{code}` | Friend challenge: creator/opponent, question snapshot, immutable scores, status (open/waiting/active) |
 | `quizzes` | custom | Optional Firestore question fallback bank |
 
 **Indexes required:** none — all leaderboard queries are single-field `orderBy` (`xp` desc, `weeklyXp` desc) with `limit`, no composite indexes needed.
 
 ### Security model (`firestore.rules`)
 
-- `users`: readable by any authenticated user (leaderboard); create/update only by owner with **delta-bounded** writes — XP/`weeklyXp` increase by ≤ 340 per write, `quizzesCompleted` +1, answer/correct counters ≤ +10, streak within +1, achievements ≤ +2.
-- `quizAttempts` / `dailyChallengeAttempts`: **create-only**, validated, owner-scoped, immutable (update/delete denied).
-- `challenges`: readable by authenticated users; create by owner (`status: 'open'`); update only for joining (`open → active`) or writing your own score slot once; the questions snapshot, creator, category and total are immutable; winner is **derived from stored scores**, never accepted from the client.
+- `users`: readable by any authenticated user (leaderboard); create/update only by owner with **delta-bounded** writes — XP/`weeklyXp` increase by ≤ 340 per write, `quizzesCompleted` +1, answer/correct counters ≤ +10, streak within +1, achievements ≤ +5.
+- `users/{uid}/notifications`: readable by owner; create by authenticated user (challenge and challenge-created types); update to mark read; delete denied.
+- `quizAttempts` / `dailyChallengeAttempts`: **create-only**, validated, owner-scoped, immutable (update/delete denied). Supports up to 20 questions.
+- `challenges`: readable by authenticated users; create by owner (`status: 'open'` or `'waiting'` for direct challenges); update only for joining (`open → active` or `waiting → active`) or writing your own score slot once; the questions snapshot, creator, category and total are immutable; winner is **derived from stored scores**, never accepted from the client. Supports 5, 10, or 20 questions.
 - **No Cloud Functions** — the trust boundary is client-rules enforced. Residual server-side risk: a determined attacker could still grant themselves extra XP by creating fresh accounts or waiting across days; there is no per-day total cap across multiple categories. Mitigations: deterministic attempt IDs (one play per category per day), delta caps, and immutable leaderboard inputs. Documented as acceptable for this scope.
 
 ## Project Structure
@@ -102,8 +117,8 @@ src/
   components/ui/    # Design system: Button, Card, Badge, Modal, ScoreRing, StatCard, ...
   pages/            # Route-level pages (lazy loaded)
   store/            # Zustand stores: quiz, profile, toasts
-  services/         # firebase.config, firestore, trivia API, profile, leaderboard, daily challenge, challenges
-  utils/            # progression, achievements, dates, challengeCode, categories, questionBank, constants
+  services/         # firebase.config, firestore, trivia API, profile, leaderboard, daily challenge, challenges, notifications
+  utils/            # progression, achievements, dates, challengeCode, categories, questionBank, constants, shuffleArray
   test/             # Vitest setup
   theme/            # MUI theme configuration
 ```

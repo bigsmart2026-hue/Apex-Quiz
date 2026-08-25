@@ -14,7 +14,7 @@ import { createChallenge, joinChallenge } from '../services/challenge.service';
 import { challengeShareUrl } from '../utils/challengeCode';
 import { seededSample } from '../utils/dates';
 
-const QUESTION_COUNTS = [5, 10];
+const QUESTION_COUNTS = [5, 10, 20];
 
 const CATEGORY_TO_BANK = {
   frontend: 'frontend',

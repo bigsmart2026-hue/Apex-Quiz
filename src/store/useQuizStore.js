@@ -4,7 +4,7 @@ import { fetchTriviaQuestions } from '../services/triviaApi';
 import { fetchQuiz } from '../services/firestore.service';
 import { recordQuizCompletion } from '../services/profile.service';
 import { submitChallengeScore } from '../services/challenge.service';
-import { questionBank } from '../utils/questionBank';
+import { questionBank, getQuestionsForLevel } from '../utils/questionBank';
 import { TIMER_DURATION } from '../utils/constants';
 import { shuffleArray, shuffleQuestionOptions } from '../utils/shuffleArray';
 import { toDateKey } from '../utils/dates';
@@ -100,6 +100,7 @@ const useQuizStore = create(
 
       /**
        * Loads questions for a category. Order: Open Trivia DB -> local bank -> Firestore.
+       * Local bank questions are filtered by the player's unlocked level.
        */
       fetchQuestions: async (apiId, categoryName) => {
         set({ isLoading: true, error: null, timer: TIMER_DURATION, isDaily: false, challenge: null });
@@ -117,7 +118,10 @@ const useQuizStore = create(
         const bankKey = normalizeBankKey(categoryName);
         const localBank = questionBank[bankKey];
         if (localBank?.length) {
-          applyQuestions(set, localBank);
+          const { useProfileStore } = await import('./useProfileStore');
+          const playerLevel = useProfileStore.getState().profile?.unlockedLevel || 1;
+          const filtered = getQuestionsForLevel(localBank, playerLevel);
+          applyQuestions(set, filtered.length ? filtered : localBank);
           return;
         }
 
@@ -233,7 +237,14 @@ const useQuizStore = create(
 
           useProfileStore.getState().applyCompletion(get().completionSummary);
 
-          if (summary.xpGained > 0) {
+          if (summary.levelCompleted) {
+            const { LEVELS } = await import('../utils/progression');
+            const nextLevelInfo = LEVELS.find((l) => l.level === summary.unlockedLevel);
+            toast.success(
+              `Level ${summary.unlockedLevel} Unlocked!`,
+              `${nextLevelInfo?.name || 'Next level'} — ${nextLevelInfo?.description || ''}`
+            );
+          } else if (summary.xpGained > 0) {
             toast.success(
               isDaily ? 'Daily challenge complete!' : 'Quiz complete!',
               `+${summary.xpGained} XP${summary.leveledUp ? ` · Level ${summary.level} — ${summary.levelName}!` : ''}`

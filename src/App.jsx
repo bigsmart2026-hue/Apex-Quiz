@@ -47,11 +47,18 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
+    updateLastSeen(user.uid);
     const onVisibility = () => {
       if (document.visibilityState === 'visible') updateLastSeen(user.uid);
     };
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') updateLastSeen(user.uid);
+    }, 60_000);
     document.addEventListener('visibilitychange', onVisibility);
-    return () => document.removeEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      clearInterval(interval);
+    };
   }, [user]);
 
   return (

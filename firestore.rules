@@ -36,11 +36,13 @@ service cloud.firestore {
           && request.resource.data.xp - resource.data.xp <= 340
           && request.resource.data.quizzesCompleted == resource.data.quizzesCompleted + 1
           && request.resource.data.questionsAnswered >= resource.data.questionsAnswered
-          && request.resource.data.questionsAnswered <= resource.data.questionsAnswered + 10
+          && request.resource.data.questionsAnswered <= resource.data.questionsAnswered + 20
           && request.resource.data.correctAnswers >= resource.data.correctAnswers
-          && request.resource.data.correctAnswers <= resource.data.correctAnswers + 10
+          && request.resource.data.correctAnswers <= resource.data.correctAnswers + 20
           && request.resource.data.bestScorePct >= resource.data.bestScorePct
           && request.resource.data.bestScorePct <= 100
+          && request.resource.data.unlockedLevel >= (resource.data.unlockedLevel ? resource.data.unlockedLevel : 1)
+          && request.resource.data.unlockedLevel <= 5
           && request.resource.data.currentStreak >= 1
           && request.resource.data.currentStreak <= resource.data.currentStreak + 1
           && request.resource.data.longestStreak >= resource.data.longestStreak
@@ -78,7 +80,7 @@ service cloud.firestore {
         && request.resource.data.score >= 0
         && request.resource.data.score <= request.resource.data.total
         && request.resource.data.total > 0
-        && request.resource.data.total <= 10
+        && request.resource.data.total <= 20
         && request.resource.data.accuracyPct >= 0
         && request.resource.data.accuracyPct <= 100;
       allow update, delete: if false;
@@ -91,7 +93,7 @@ service cloud.firestore {
         && request.resource.data.score >= 0
         && request.resource.data.score <= request.resource.data.total
         && request.resource.data.total > 0
-        && request.resource.data.total <= 10;
+        && request.resource.data.total <= 20;
       allow read: if request.auth != null;
       allow update, delete: if false;
     }
@@ -105,7 +107,7 @@ service cloud.firestore {
         && request.auth.uid == request.resource.data.creatorId
         && request.resource.data.status in ['open', 'waiting']
         && request.resource.data.total >= 1
-        && request.resource.data.total <= 10;
+        && request.resource.data.total <= 20;
       allow update: if request.auth != null
         && request.resource.data.code == resource.data.code
         && request.resource.data.creatorId == resource.data.creatorId

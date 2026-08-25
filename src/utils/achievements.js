@@ -1,4 +1,4 @@
-import { Trophy, Target, Flame, Brain, Zap, Crosshair, Rocket, BookOpen, Medal, CalendarDays } from 'lucide-react';
+import { Trophy, Target, Flame, Brain, Zap, Crosshair, BookOpen, Medal, CalendarDays, Shield, Crown, Star, Gem } from 'lucide-react';
 import { getLevel } from './progression';
 
 /**
@@ -43,10 +43,28 @@ export const ACHIEVEMENTS = [
     Icon: Crosshair,
   },
   {
+    id: 'level-2',
+    title: 'Level 2 Unlocked',
+    description: 'Score 70%+ to reach Intermediate',
+    Icon: Shield,
+  },
+  {
+    id: 'level-3',
+    title: 'Level 3 Unlocked',
+    description: 'Score 75%+ to reach Advanced',
+    Icon: Star,
+  },
+  {
+    id: 'level-4',
+    title: 'Level 4 Unlocked',
+    description: 'Score 80%+ to reach Expert',
+    Icon: Crown,
+  },
+  {
     id: 'level-5',
-    title: 'Expert Tier',
-    description: 'Reach Level 5 (Expert)',
-    Icon: Rocket,
+    title: 'Apex Reached',
+    description: 'Score 85%+ to reach the highest level',
+    Icon: Gem,
   },
   {
     id: 'category-master',
@@ -94,7 +112,10 @@ export function evaluateNewAchievements(ctx, owned = {}) {
   if (ctx.totalQuestionsAnswered >= 100) grant('questions-100');
   if (ctx.score === ctx.total && ctx.avgAnswerSec < 4 && ctx.total > 0) grant('speed-demon');
   if (ctx.accuracyPct >= 90 && ctx.total > 0) grant('accuracy-90');
-  if (ctx.level >= 5) grant('level-5');
+  if (ctx.unlockedLevel >= 2) grant('level-2');
+  if (ctx.unlockedLevel >= 3) grant('level-3');
+  if (ctx.unlockedLevel >= 4) grant('level-4');
+  if (ctx.unlockedLevel >= 5) grant('level-5');
   if (ctx.categoryMasteryPct >= 80) grant('category-master');
   if (ctx.wonChallenge) grant('challenge-victor');
   if (ctx.isDaily) grant('daily-challenge');

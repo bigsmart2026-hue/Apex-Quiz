@@ -124,7 +124,11 @@ export default function ResultsPage() {
                 label="XP earned"
                 value={completionSummary?.xpGained ? `+${completionSummary.xpGained}` : '—'}
                 icon={<Target className="w-5 h-5" />}
-                sub={completionSummary?.leveledUp ? `Level up to ${completionSummary.level}!` : undefined}
+                sub={completionSummary?.levelCompleted
+                  ? `Level ${completionSummary.unlockedLevel} unlocked!`
+                  : completionSummary?.leveledUp
+                    ? `Level up to ${completionSummary.level}!`
+                    : undefined}
               />
               <StatCard
                 label="Streak"

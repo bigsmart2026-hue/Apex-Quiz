@@ -41,7 +41,7 @@ const CATEGORY_TO_BANK = {
   'mobile-app-dev': 'mobileAppDev',
 };
 const bankCategories = categories.filter((c) => CATEGORY_TO_BANK[c.id]);
-const QUESTION_COUNTS = [5, 10];
+const QUESTION_COUNTS = [5, 10, 20];
 
 export default function LeaderboardPage() {
   const navigate = useNavigate();

@@ -1,71 +1,98 @@
 /**
  * Centralized progression logic — XP, levels, streaks.
- * All XP math lives here so it is never hardcoded across the UI.
+ * 5-tier level system: Beginner → Intermediate → Advanced → Expert → Apex
+ * Players unlock the next level by scoring above a threshold.
  */
 
 export const LEVELS = [
-  { level: 1, name: 'Rookie', minXp: 0 },
-  { level: 2, name: 'Learner', minXp: 100 },
-  { level: 3, name: 'Challenger', minXp: 250 },
-  { level: 4, name: 'Scholar', minXp: 450 },
-  { level: 5, name: 'Expert', minXp: 700 },
-  { level: 6, name: 'Master', minXp: 1000 },
-  { level: 7, name: 'Apex', minXp: 1400 },
+  { level: 1, name: 'Beginner', minScorePct: 0, description: 'Easy questions to get you started' },
+  { level: 2, name: 'Intermediate', minScorePct: 70, description: 'Harder questions with more reasoning' },
+  { level: 3, name: 'Advanced', minScorePct: 75, description: 'Challenging questions requiring deeper understanding' },
+  { level: 4, name: 'Expert', minScorePct: 80, description: 'Very difficult questions under time pressure' },
+  { level: 5, name: 'Apex', minScorePct: 85, description: 'The hardest questions — competitive mode' },
 ];
 
+export const MAX_LEVEL = LEVELS.length;
+
+/** XP rewards */
 export const XP_PER_CORRECT = 10;
 export const XP_COMPLETION = 20;
-export const XP_PERFECT_BONUS = 30;
+export const XP_PERFECT_BONUS = 100;
 export const XP_DAILY_MULTIPLIER = 2;
 export const XP_STREAK_BONUS_CAP = 7;
 export const XP_STREAK_BONUS = 2;
+export const XP_SPEED_BONUS = 5;
+export const XP_SPEED_THRESHOLD_SEC = 8;
+export const XP_LEVEL_COMPLETION = 50;
 
-// Absolute ceiling for a single legitimate quiz completion:
-// perfect (150) + streak bonus (14) doubled by the daily multiplier = 328.
-// The Firestore rules bound per-write XP deltas by this constant.
+// Absolute ceiling for a single legitimate quiz completion.
 export const MAX_XP_PER_QUIZ = 340;
 
-const levelFromXp = (xp) => {
-  let current = LEVELS[0];
-  for (const lvl of LEVELS) {
-    if (xp >= lvl.minXp) current = lvl;
-    else break;
+/**
+ * Returns the player's current level object based on unlockedLevel.
+ * @param {number} unlockedLevel - highest level unlocked (1-5)
+ */
+export const getLevelInfo = (unlockedLevel = 1) => {
+  return LEVELS.find((l) => l.level === Math.min(unlockedLevel, MAX_LEVEL)) || LEVELS[0];
+};
+
+/** Legacy compat: derive level number from xp for leaderboard display */
+export const getLevel = (xp) => {
+  if (xp >= 1400) return 7;
+  if (xp >= 1000) return 6;
+  if (xp >= 700) return 5;
+  if (xp >= 450) return 4;
+  if (xp >= 250) return 3;
+  if (xp >= 100) return 2;
+  return 1;
+};
+
+export const getLevelName = (xp) => {
+  const lvl = getLevel(xp);
+  const names = { 1: 'Rookie', 2: 'Learner', 3: 'Challenger', 4: 'Scholar', 5: 'Expert', 6: 'Master', 7: 'Apex' };
+  return names[lvl] || 'Rookie';
+};
+
+/**
+ * Check if a quiz score qualifies the player to unlock the next level.
+ * @param {number} currentLevel - player's current level (1-5)
+ * @param {number} accuracyPct - quiz accuracy percentage (0-100)
+ * @returns {{ canUnlock: boolean, requiredPct: number, nextLevel: number|null }}
+ */
+export const checkLevelUnlock = (currentLevel, accuracyPct) => {
+  if (currentLevel >= MAX_LEVEL) {
+    return { canUnlock: false, requiredPct: 0, nextLevel: null };
   }
-  return current;
+  const nextLevel = LEVELS.find((l) => l.level === currentLevel + 1);
+  if (!nextLevel) return { canUnlock: false, requiredPct: 0, nextLevel: null };
+  return {
+    canUnlock: accuracyPct >= nextLevel.minScorePct,
+    requiredPct: nextLevel.minScorePct,
+    nextLevel: nextLevel.level,
+  };
 };
 
-export const getLevel = (xp) => levelFromXp(xp).level;
-export const getLevelName = (xp) => levelFromXp(xp).name;
-
-export const getLevelBounds = (level) => {
-  const idx = LEVELS.findIndex((l) => l.level === level);
-  const minXp = LEVELS[idx]?.minXp ?? 0;
-  const maxXp = LEVELS[idx + 1]?.minXp ?? Infinity;
-  return { minXp, maxXp };
-};
-
-export const xpProgress = (xp) => {
-  const level = getLevel(xp);
-  const { minXp, maxXp } = getLevelBounds(level);
-  if (!isFinite(maxXp)) return 1;
-  return Math.min(1, (xp - minXp) / (maxXp - minXp));
-};
-
-export const xpToNextLevel = (xp) => {
-  const { maxXp } = getLevelBounds(getLevel(xp));
-  return isFinite(maxXp) ? Math.max(0, maxXp - xp) : 0;
+/**
+ * Returns difficulty label for the current level.
+ */
+export const getDifficultyLabel = (level) => {
+  const labels = { 1: 'Easy', 2: 'Medium', 3: 'Hard', 4: 'Very Hard', 5: 'Apex' };
+  return labels[level] || 'Easy';
 };
 
 /**
  * Computes XP awarded for a finished quiz.
- * @param {{ score: number, total: number, isDaily?: boolean, streak?: number }} params
+ * @param {{ score: number, total: number, isDaily?: boolean, streak?: number,
+ *           avgAnswerSec?: number, levelCompleted?: boolean }} params
  */
-export const computeQuizXp = ({ score, total, isDaily = false, streak = 0 }) => {
+export const computeQuizXp = ({ score, total, isDaily = false, streak = 0, avgAnswerSec = 0, levelCompleted = false }) => {
   if (total <= 0) return 0;
   const base = score * XP_PER_CORRECT + XP_COMPLETION;
   const perfect = score === total ? XP_PERFECT_BONUS : 0;
+  const speed = avgAnswerSec > 0 && avgAnswerSec < XP_SPEED_THRESHOLD_SEC ? XP_SPEED_BONUS : 0;
   const streakBonus = Math.min(Math.max(streak, 0), XP_STREAK_BONUS_CAP) * XP_STREAK_BONUS;
-  const raw = base + perfect + streakBonus;
+  const levelBonus = levelCompleted ? XP_LEVEL_COMPLETION : 0;
+  const raw = base + perfect + speed + streakBonus + levelBonus;
   return isDaily ? Math.round(raw * XP_DAILY_MULTIPLIER) : raw;
 };
 
@@ -73,6 +100,7 @@ export const getAccuracy = (score, total) => (total > 0 ? Math.round((score / to
 
 export const DEFAULT_PROFILE = {
   xp: 0,
+  unlockedLevel: 1,
   currentStreak: 0,
   longestStreak: 0,
   lastPlayedDate: null,
