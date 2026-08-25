@@ -112,7 +112,7 @@ export default function ChallengesPage() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-300 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -180,7 +180,7 @@ export default function ChallengesPage() {
                       className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-colors cursor-pointer ${
                         questionCount === count
                           ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                          : 'border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-slate-300'
+                          : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                       }`}
                     >
                       {count}

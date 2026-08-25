@@ -51,14 +51,14 @@ export default function ResultCard({ question, selectedAnswer, index, expanded, 
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : answered
                   ? 'text-rose-600 dark:text-rose-400'
-                  : 'text-slate-500 dark:text-slate-400'
+                  : 'text-slate-600 dark:text-slate-400'
             }`}
           >
             {isCorrect ? <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Correct</span> : answered ? <span className="inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Incorrect</span> : '— Not answered'}
           </span>
         </span>
         <ChevronDown
-          className={`w-4 h-4 text-slate-400 flex-shrink-0 mt-1 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-slate-500 dark:text-slate-400 flex-shrink-0 mt-1 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
           aria-hidden="true"
         />
       </button>

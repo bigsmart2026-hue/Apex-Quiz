@@ -28,7 +28,7 @@ export default function AuthLayout({ title, subtitle, children }) {
               {title}
             </h1>
             {subtitle && (
-              <p className="text-slate-500 dark:text-slate-400 text-sm">{subtitle}</p>
+              <p className="text-slate-600 dark:text-slate-400 text-sm">{subtitle}</p>
             )}
           </div>
 

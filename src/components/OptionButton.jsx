@@ -25,7 +25,7 @@ export default function OptionButton({ text, index, isSelected, isCorrect, showF
       letterStyle = 'bg-rose-500 text-white';
     } else {
       borderStyle = 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 opacity-60';
-      letterStyle = 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400';
+      letterStyle = 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400';
     }
   } else if (isSelected) {
     borderStyle = 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 ring-2 ring-amber-500/40';

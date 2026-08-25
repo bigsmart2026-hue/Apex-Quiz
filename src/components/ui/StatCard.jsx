@@ -17,7 +17,7 @@ export default function StatCard({ label, value, icon, sub }) {
         <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
           {value}
         </p>
-        {sub && <p className="text-xs text-slate-500 dark:text-slate-400">{sub}</p>}
+        {sub && <p className="text-xs text-slate-600 dark:text-slate-400">{sub}</p>}
       </div>
     </div>
   );

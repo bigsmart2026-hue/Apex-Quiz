@@ -39,7 +39,7 @@ export default function LevelBadge({ level, name, description, compact = false }
           Level {level} — {name}
         </p>
         {description && (
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{description}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 truncate">{description}</p>
         )}
         {nextLevel && (
           <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-0.5">

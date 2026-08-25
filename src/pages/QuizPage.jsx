@@ -160,11 +160,11 @@ export default function QuizPage() {
             ) : error ? (
               <div className="text-center py-12">
                 <p className="text-rose-600 dark:text-rose-400 font-medium mb-2">Failed to load quiz</p>
-                <p className="text-slate-500 dark:text-slate-400 text-sm">{error}</p>
+                <p className="text-slate-600 dark:text-slate-400 text-sm">{error}</p>
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-slate-500 dark:text-slate-400">No questions available</p>
+                <p className="text-slate-600 dark:text-slate-400">No questions available</p>
               </div>
             )}
           </div>
@@ -179,7 +179,7 @@ export default function QuizPage() {
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${
                   hasAnswered
                     ? 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 cursor-not-allowed'
                 }`}
               >
                 {isLast ? 'Submit' : 'Next'}

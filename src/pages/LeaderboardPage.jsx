@@ -25,7 +25,7 @@ const TABS = [
 
 const RANK_STYLES = [
   { ring: 'border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20', icon: <Crown className="w-5 h-5 text-amber-500" /> },
-  { ring: 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800', icon: <Medal className="w-5 h-5 text-slate-400" /> },
+  { ring: 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800', icon: <Medal className="w-5 h-5 text-slate-500 dark:text-slate-400" /> },
   { ring: 'border-amber-700/40 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-900/20', icon: <Medal className="w-5 h-5 text-amber-700 dark:text-amber-400" /> },
 ];
 
@@ -146,7 +146,7 @@ export default function LeaderboardPage() {
                 clearLeaderboardError();
                 navigate(-1);
               }}
-              className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-300 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -181,7 +181,7 @@ export default function LeaderboardPage() {
                   className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
                     leaderboardTab === tab.id
                       ? 'bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-sm'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-300'
                   }`}
                 >
                   {tab.label}
@@ -259,7 +259,7 @@ export default function LeaderboardPage() {
                         {podium ? (
                           podium.icon
                         ) : (
-                          <span className="text-sm font-bold text-slate-500 dark:text-slate-400 tabular-nums">
+                          <span className="text-sm font-bold text-slate-600 dark:text-slate-400 tabular-nums">
                             {index + 1}
                           </span>
                         )}
@@ -289,7 +289,7 @@ export default function LeaderboardPage() {
                       {!isCurrentUser && (
                         <button
                           onClick={() => openChallenge(entry)}
-                          className="ml-1 p-2 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors cursor-pointer"
+                          className="ml-1 p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors cursor-pointer"
                           title={`Challenge ${entry.displayName}`}
                         >
                           <Swords className="w-4 h-4" />
@@ -360,7 +360,7 @@ export default function LeaderboardPage() {
                     className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-colors cursor-pointer ${
                       questionCount === count
                         ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                        : 'border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-slate-300'
+                        : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                     }`}
                   >
                     {count}

@@ -14,8 +14,8 @@ export default function TimerBar({ timer }) {
     <div className="w-full space-y-1">
       <div className="flex items-center justify-between text-xs sm:text-sm">
         <div className="flex items-center gap-1.5">
-          <TimerIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-          <span className="text-slate-500 dark:text-slate-400 text-caption">Time remaining</span>
+          <TimerIcon className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+          <span className="text-slate-600 dark:text-slate-400 text-caption">Time remaining</span>
         </div>
         <span className={`font-semibold tabular-nums ${isLow ? 'text-rose-600 dark:text-rose-400' : 'text-slate-700 dark:text-slate-300'}`}>
           {timer}s

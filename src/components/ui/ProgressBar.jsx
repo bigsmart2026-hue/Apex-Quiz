@@ -10,7 +10,7 @@ export default function ProgressBar({ value, label, barClassName = 'bg-amber-500
   return (
     <div>
       {label && (
-        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+        <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
           <span>{label}</span>
           <span className="font-semibold tabular-nums">{Math.round(clamped * 100)}%</span>
         </div>

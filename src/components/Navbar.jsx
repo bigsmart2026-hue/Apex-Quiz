@@ -146,7 +146,7 @@ export default function Navbar({ showLeaderboard = true }) {
                     )}
                   </div>
                   {notifications.length === 0 ? (
-                    <div className="p-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                    <div className="p-6 text-center text-sm text-slate-600 dark:text-slate-400">
                       No notifications yet
                     </div>
                   ) : (
@@ -199,7 +199,7 @@ export default function Navbar({ showLeaderboard = true }) {
                                 e.stopPropagation();
                                 markNotificationRead(user.uid, notif.id).catch(() => {});
                               }}
-                              className="flex-shrink-0 p-1 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors cursor-pointer mt-0.5"
+                              className="flex-shrink-0 p-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors cursor-pointer mt-0.5"
                               title="Mark as read"
                             >
                               <Check className="w-3.5 h-3.5" />

@@ -56,7 +56,7 @@ export default function ScoreRing({
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className={`text-4xl font-bold tabular-nums ${colorClass}`}>{display}</span>
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{label}</span>
+        <span className="text-xs text-slate-600 dark:text-slate-400 font-semibold">{label}</span>
       </div>
     </div>
   );
