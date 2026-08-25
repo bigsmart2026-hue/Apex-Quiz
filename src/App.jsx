@@ -6,6 +6,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { lightTheme, darkTheme } from './theme/muiTheme';
 import useQuizStore from './store/useQuizStore';
 import { useProfileStore } from './store/useProfileStore';
+import { updateLastSeen } from './services/profile.service';
 import ProtectedRoute from './components/ProtectedRoute';
 import PageTransition from './components/PageTransition';
 import { Background } from './components/Background';
@@ -39,10 +40,20 @@ export default function App() {
   useEffect(() => {
     if (user) {
       loadProfile(user);
+      updateLastSeen(user.uid);
     } else {
       clearProfile();
     }
   }, [user, loadProfile, clearProfile]);
+
+  useEffect(() => {
+    if (!user) return;
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') updateLastSeen(user.uid);
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [user]);
 
   return (
     <StyledEngineProvider injectFirst>

@@ -8,6 +8,8 @@ const LEADERBOARD_LIMIT = 50;
 const decorate = (snapshot) =>
   snapshot.docs.map((docSnap, index) => {
     const data = docSnap.data();
+    const lastSeen = data.lastSeen?.toDate?.() ?? null;
+    const isOnline = lastSeen && (Date.now() - lastSeen.getTime() < 3 * 60 * 1000);
     return {
       uid: docSnap.id,
       displayName: data.displayName || 'Anonymous',
@@ -17,6 +19,7 @@ const decorate = (snapshot) =>
       level: getLevel(data.xp || 0),
       levelName: getLevelName(data.xp || 0),
       rank: index + 1,
+      isOnline,
     };
   });
 

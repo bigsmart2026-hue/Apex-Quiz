@@ -84,4 +84,5 @@ export const DEFAULT_PROFILE = {
   weekStart: null,
   achievements: {},
   categoryStats: {},
+  lastSeen: null,
 };

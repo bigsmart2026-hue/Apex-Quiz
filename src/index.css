@@ -46,7 +46,7 @@ h1, h2, h3, h4, h5, h6,
   inset: 0;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.025;
+  opacity: 0.012;
   background-image: repeating-conic-gradient(#000 0% 25%, transparent 0% 50%) 0 0 / 2px 2px;
 }
 

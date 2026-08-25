@@ -61,7 +61,7 @@ export default function CategorySelector() {
               <h1 className="text-3xl sm:text-4xl text-slate-900 dark:text-white font-heading mb-2">
                 Choose Your Challenge
               </h1>
-              <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base">
+              <p className="text-slate-700 dark:text-slate-200 text-sm sm:text-base">
                 Test your knowledge, earn XP and climb the leaderboard.
               </p>
             </div>

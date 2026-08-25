@@ -17,6 +17,7 @@ export const addDaysKey = (dateKey, days) => {
 };
 
 export const diffInDays = (fromKey, toKey) => {
+  if (!fromKey || !toKey) return 0;
   const [y1, m1, d1] = fromKey.split('-').map(Number);
   const [y2, m2, d2] = toKey.split('-').map(Number);
   const a = Date.UTC(y1, m1 - 1, d1);

@@ -19,11 +19,11 @@ export function Background() {
       <div className="noise-overlay" />
       <div
         className="fixed inset-0 bg-cover bg-center -z-10 transition-opacity"
-        style={{ backgroundImage: `url(${BG_IMAGE_URL})` }}
+        style={{ backgroundImage: `url(${BG_IMAGE_URL})`, filter: 'brightness(0.55)' }}
         aria-hidden="true"
       />
       <div
-        className="fixed inset-0 -z-[5] bg-white/60 dark:bg-slate-950/70 transition-colors duration-300"
+        className="fixed inset-0 -z-[5] bg-white/30 dark:bg-slate-950/70 transition-colors duration-300"
         aria-hidden="true"
       />
     </>

@@ -6,6 +6,7 @@ import { recordQuizCompletion } from '../services/profile.service';
 import { submitChallengeScore } from '../services/challenge.service';
 import { questionBank } from '../utils/questionBank';
 import { TIMER_DURATION } from '../utils/constants';
+import { shuffleArray } from '../utils/shuffleArray';
 import { toDateKey } from '../utils/dates';
 import { getAccuracy } from '../utils/progression';
 import { toast } from './useToastStore';
@@ -46,7 +47,7 @@ const normalizeBankKey = (categoryName) => {
 
 const applyQuestions = (set, questions, extra = {}) =>
   set({
-    questions,
+    questions: shuffleArray(questions),
     currentIndex: 0,
     selectedAnswers: {},
     answerTimes: {},

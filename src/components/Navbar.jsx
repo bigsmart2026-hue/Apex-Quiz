@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { LogOut, Trophy, Swords } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LogOut, Trophy, Swords, Bell } from 'lucide-react';
 import useQuizStore from '../store/useQuizStore';
 import { useProfileStore } from '../store/useProfileStore';
 import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
+import { listenNotifications, markAllRead } from '../services/notification.service';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import Avatar from './ui/Avatar';
@@ -19,7 +20,28 @@ export default function Navbar({ showLeaderboard = true }) {
   const levelInfo = useProfileStore((s) => s.levelInfo);
   const { logoutUser } = useFirebaseAuth();
   const navigate = useNavigate();
+  const [, setSearchParams] = useSearchParams();
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const panelRef = useRef(null);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    if (!user) return;
+    const unsub = listenNotifications(user.uid, setNotifications);
+    return unsub;
+  }, [user]);
+
+  useEffect(() => {
+    if (!panelOpen) return;
+    const onClick = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target)) setPanelOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [panelOpen]);
 
   const handleLogout = async () => {
     setLogoutLoading(true);
@@ -30,6 +52,17 @@ export default function Navbar({ showLeaderboard = true }) {
       // Session may already be cleared; login guard handles the rest
     } finally {
       setLogoutLoading(false);
+    }
+  };
+
+  const handleNotificationClick = (notif) => {
+    if (!notif.read) {
+      markAllRead(user.uid).catch(() => {});
+    }
+    setPanelOpen(false);
+    if (notif.type === 'challenge' && notif.challengeCode) {
+      setSearchParams({ code: notif.challengeCode });
+      navigate('/challenges');
     }
   };
 
@@ -68,6 +101,81 @@ export default function Navbar({ showLeaderboard = true }) {
             <Swords className="w-4 h-4" />
             <span className="hidden sm:inline">Challenges</span>
           </Link>
+
+          {/* Notifications */}
+          <div className="relative" ref={panelRef}>
+            <button
+              onClick={() => setPanelOpen((o) => !o)}
+              className="relative p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold px-1">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            <AnimatePresence>
+              {panelOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl z-50"
+                >
+                  <div className="p-3 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-slate-900 dark:text-white">Notifications</span>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={() => markAllRead(user.uid).catch(() => {})}
+                        className="text-xs text-amber-600 dark:text-amber-400 font-semibold cursor-pointer hover:underline"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-slate-400 dark:text-slate-500">
+                      No notifications yet
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                      {notifications.map((notif) => (
+                        <button
+                          key={notif.id}
+                          onClick={() => handleNotificationClick(notif)}
+                          className={`w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer ${
+                            !notif.read ? 'bg-amber-50/50 dark:bg-amber-900/10' : ''
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <Swords className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm text-slate-900 dark:text-white">
+                                <span className="font-semibold">{notif.fromName}</span> challenged you to a quiz!
+                              </p>
+                              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                                {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
+                              </p>
+                              <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
+                                Tap to join →
+                              </p>
+                            </div>
+                            {!notif.read && (
+                              <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 mt-1.5" />
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {user && (
             <Link

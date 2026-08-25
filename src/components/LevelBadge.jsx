@@ -32,7 +32,7 @@ export default function LevelBadge({ level, name, xp, progress, compact = false 
             transition={{ duration: 0.6, ease: 'easeOut' }}
           />
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400 tabular-nums mt-0.5">
+        <p className="text-xs text-slate-700 dark:text-slate-200 font-semibold tabular-nums mt-0.5">
           {xp.toLocaleString()} XP
         </p>
       </div>

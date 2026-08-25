@@ -9,6 +9,12 @@ import {
 } from '../utils/progression';
 import { evaluateNewAchievements } from '../utils/achievements';
 
+export const updateLastSeen = (uid) => {
+  return updateDoc(doc(db, USERS_COLLECTION, uid), {
+    lastSeen: serverTimestamp(),
+  }).catch(() => {});
+};
+
 export const getOrCreateProfile = async (user) => {
   const ref = doc(db, USERS_COLLECTION, user.uid);
   const snap = await getDoc(ref);
