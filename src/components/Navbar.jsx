@@ -6,6 +6,7 @@ import useQuizStore from '../store/useQuizStore';
 import { useProfileStore } from '../store/useProfileStore';
 import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
 import { listenNotifications, markAllRead, markNotificationRead } from '../services/notification.service';
+import { joinChallenge } from '../services/challenge.service';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import Avatar from './ui/Avatar';
@@ -55,17 +56,21 @@ export default function Navbar({ showLeaderboard = true }) {
     }
   };
 
-  const handleNotificationClick = (notif) => {
+  const handleNotificationClick = async (notif) => {
     if (!notif.read) {
       markNotificationRead(user.uid, notif.id).catch(() => {});
     }
     setPanelOpen(false);
-    if (notif.type === 'challenge' && notif.challengeCode) {
-      setSearchParams({ code: notif.challengeCode });
-      navigate('/challenges');
-    } else if (notif.type === 'challenge-created' && notif.challengeCode) {
-      setSearchParams({ code: notif.challengeCode });
-      navigate('/challenges');
+
+    if ((notif.type === 'challenge' || notif.type === 'challenge-created') && notif.challengeCode) {
+      try {
+        const challenge = await joinChallenge(notif.challengeCode, user);
+        useQuizStore.getState().startChallenge(challenge, challenge.questions);
+        navigate('/quiz');
+      } catch {
+        setSearchParams({ code: notif.challengeCode });
+        navigate('/challenges');
+      }
     }
   };
 

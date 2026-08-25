@@ -5,7 +5,7 @@ import { fetchQuiz } from '../services/firestore.service';
 import { recordQuizCompletion } from '../services/profile.service';
 import { submitChallengeScore } from '../services/challenge.service';
 import { questionBank, getQuestionsForLevel } from '../utils/questionBank';
-import { TIMER_DURATION } from '../utils/constants';
+import { TIMER_DURATION, getQuizConfig } from '../utils/constants';
 import { shuffleArray, shuffleQuestionOptions } from '../utils/shuffleArray';
 import { toDateKey } from '../utils/dates';
 import { getAccuracy } from '../utils/progression';
@@ -24,6 +24,7 @@ const initialState = {
   score: 0,
   isFinished: false,
   timer: TIMER_DURATION,
+  quizTimerDuration: TIMER_DURATION,
   startedAt: 0,
   completionSummary: null,
   challenge: null,
@@ -50,7 +51,7 @@ const normalizeBankKey = (categoryName) => {
   return bankMap[nameLower] || nameLower.replace(/[\s-]+/g, '');
 };
 
-const applyQuestions = (set, questions, extra = {}) =>
+const applyQuestions = (set, questions, timerDuration = TIMER_DURATION, extra = {}) =>
   set({
     questions: shuffleQuestionOptions(shuffleArray(questions)),
     currentIndex: 0,
@@ -58,7 +59,8 @@ const applyQuestions = (set, questions, extra = {}) =>
     answerTimes: {},
     score: 0,
     isFinished: false,
-    timer: TIMER_DURATION,
+    timer: timerDuration,
+    quizTimerDuration: timerDuration,
     startedAt: Date.now(),
     completionSummary: null,
     error: null,
@@ -83,17 +85,21 @@ const useQuizStore = create(
       setCategory: (category) => set({ category }),
 
       setDailyChallenge: (category, questions) => {
+        const playerLevel = useProfileStore.getState().profile?.unlockedLevel || 1;
+        const { timerDuration } = getQuizConfig(playerLevel);
         set({ category, isDaily: true, challenge: null });
-        applyQuestions(set, questions);
+        applyQuestions(set, questions, timerDuration);
       },
 
       startChallenge: (challenge, questions) => {
+        const playerLevel = useProfileStore.getState().profile?.unlockedLevel || 1;
+        const { timerDuration } = getQuizConfig(playerLevel);
         set({
           category: { id: challenge.categoryId, name: challenge.categoryName },
           isDaily: false,
           challenge,
         });
-        applyQuestions(set, questions);
+        applyQuestions(set, questions, timerDuration);
       },
 
       clearChallenge: () => set({ challenge: null, isDaily: false }),
@@ -120,8 +126,10 @@ const useQuizStore = create(
         if (localBank?.length) {
           const { useProfileStore } = await import('./useProfileStore');
           const playerLevel = useProfileStore.getState().profile?.unlockedLevel || 1;
+          const { questionCount, timerDuration } = getQuizConfig(playerLevel);
           const filtered = getQuestionsForLevel(localBank, playerLevel);
-          applyQuestions(set, filtered.length ? filtered : localBank);
+          const limited = filtered.slice(0, questionCount);
+          applyQuestions(set, limited.length ? limited : localBank.slice(0, questionCount), timerDuration);
           return;
         }
 
@@ -163,7 +171,7 @@ const useQuizStore = create(
         const isLast = currentIndex === questions.length - 1;
 
         if (!isLast) {
-          set({ currentIndex: currentIndex + 1, timer: TIMER_DURATION });
+          set({ currentIndex: currentIndex + 1, timer: get().quizTimerDuration });
           return;
         }
 
@@ -256,6 +264,7 @@ const useQuizStore = create(
             });
           }
         } catch (err) {
+          console.error('[quiz] save failed:', err);
           const alreadyPlayed = err.message === 'QUIZ_ALREADY_PLAYED';
           set({
             completionSummary: {

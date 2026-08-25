@@ -96,6 +96,8 @@ export async function recordQuizCompletion(user, category, params) {
       ? { ...DEFAULT_PROFILE, ...userSnap.data() }
       : { ...DEFAULT_PROFILE, displayName: user.displayName };
 
+    console.log('[recordQuizCompletion] profile:', JSON.stringify(profile));
+
     const streak = profile.lastPlayedDate === todayKey
       ? profile.currentStreak
       : isYesterday(profile.lastPlayedDate)
@@ -170,8 +172,7 @@ export async function recordQuizCompletion(user, category, params) {
       });
     }
 
-    tx.set(userRef, {
-      ...profile,
+    tx.update(userRef, {
       displayName: user.displayName,
       xp: newXp,
       unlockedLevel: newUnlockedLevel,
@@ -187,7 +188,7 @@ export async function recordQuizCompletion(user, category, params) {
       achievements,
       categoryStats,
       updatedAt: serverTimestamp(),
-    }, { merge: false });
+    });
 
     return {
       xpGained,
