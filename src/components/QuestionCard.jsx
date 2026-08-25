@@ -30,7 +30,7 @@ export default function QuestionCard({ question, selectedAnswer, onSelect, quest
         className="space-y-6"
       >
         <div className="text-center space-y-2">
-          <p className="text-slate-500 dark:text-slate-400 text-caption">
+          <p className="text-slate-600 dark:text-slate-400 text-caption">
             Question {questionNumber} of {totalQuestions}
           </p>
           <h2 className="text-lg sm:text-xl text-slate-900 dark:text-slate-100 leading-relaxed px-2 font-heading">

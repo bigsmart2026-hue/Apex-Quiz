@@ -52,7 +52,7 @@ export default function ProfilePage() {
                 <h1 className="text-2xl sm:text-3xl font-heading text-slate-900 dark:text-white">
                   {user?.displayName}
                 </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{user?.email}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{user?.email}</p>
                 <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
                   <Badge variant="amber">LVL {levelInfo.level} — {levelInfo.name}</Badge>
                   <Badge variant="emerald">
@@ -62,7 +62,7 @@ export default function ProfilePage() {
               </div>
               <div className="w-full sm:w-48">
                 <ProgressBar value={levelInfo.progress} label="Level progress" />
-                <p className="text-xs text-slate-500 dark:text-slate-400 text-right mt-1 tabular-nums">
+                <p className="text-xs text-slate-600 dark:text-slate-400 text-right mt-1 tabular-nums">
                   {levelInfo.xp.toLocaleString()} XP{levelInfo.xpToNext > 0 ? ` · ${levelInfo.xpToNext} to next` : ''}
                 </p>
               </div>
@@ -104,7 +104,7 @@ export default function ProfilePage() {
                         <category.icon className="w-4 h-4 text-amber-500" />
                         {category.name}
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
+                      <span className="text-xs text-slate-600 dark:text-slate-400 tabular-nums">
                         {stat?.answered ? `${stat.answered} answered · ${mastery}%` : 'Not played'}
                       </span>
                     </div>

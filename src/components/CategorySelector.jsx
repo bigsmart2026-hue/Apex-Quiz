@@ -61,7 +61,7 @@ export default function CategorySelector() {
               <h1 className="text-3xl sm:text-4xl text-slate-900 dark:text-white font-heading mb-2">
                 Choose Your Challenge
               </h1>
-              <p className="text-slate-700 dark:text-slate-200 text-sm sm:text-base">
+              <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base">
                 Test your knowledge, earn XP and climb the leaderboard.
               </p>
             </div>
@@ -180,7 +180,7 @@ export default function CategorySelector() {
                         <p className="font-semibold text-slate-900 dark:text-white leading-tight truncate">
                           {category.name}
                         </p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500">
+                        <p className="text-xs text-slate-500 dark:text-slate-500">
                           {QUESTIONS_PER_QUIZ} questions · {category.apiId ? 'Open Trivia' : 'Apex Bank'}
                         </p>
                       </div>
@@ -188,7 +188,7 @@ export default function CategorySelector() {
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">Mastery</span>
+                        <span className="text-slate-600 dark:text-slate-400 font-medium">Mastery</span>
                         <span className={`font-semibold tabular-nums ${masteryPct >= 80 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'}`}>
                           {stat?.answered ? `${masteryPct}%` : 'New'}
                         </span>

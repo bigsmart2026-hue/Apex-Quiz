@@ -113,7 +113,7 @@ export default function ResultsPage() {
                   Quiz Complete {isDaily && '· Daily Challenge'}
                 </p>
                 <h1 className={`text-3xl sm:text-4xl font-heading ${gradeColor}`}>{gradeText}</h1>
-                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                <p className="text-slate-600 dark:text-slate-400 text-sm">
                   {score} / {total} correct · {gradeMessage}
                 </p>
               </div>

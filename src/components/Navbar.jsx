@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Trophy, Swords, Bell } from 'lucide-react';
+import { LogOut, Trophy, Swords, Bell, Check } from 'lucide-react';
 import useQuizStore from '../store/useQuizStore';
 import { useProfileStore } from '../store/useProfileStore';
 import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
-import { listenNotifications, markAllRead } from '../services/notification.service';
+import { listenNotifications, markAllRead, markNotificationRead } from '../services/notification.service';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import Avatar from './ui/Avatar';
@@ -57,7 +57,7 @@ export default function Navbar({ showLeaderboard = true }) {
 
   const handleNotificationClick = (notif) => {
     if (!notif.read) {
-      markAllRead(user.uid).catch(() => {});
+      markNotificationRead(user.uid, notif.id).catch(() => {});
     }
     setPanelOpen(false);
     if (notif.type === 'challenge' && notif.challengeCode) {
@@ -88,7 +88,7 @@ export default function Navbar({ showLeaderboard = true }) {
           {showLeaderboard && (
             <Link
               to="/leaderboard"
-              className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
               title="Leaderboard"
             >
               <Trophy className="w-4 h-4" />
@@ -98,7 +98,7 @@ export default function Navbar({ showLeaderboard = true }) {
 
           <Link
             to="/challenges"
-            className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
             title="Friend challenges"
           >
             <Swords className="w-4 h-4" />
@@ -162,7 +162,7 @@ export default function Navbar({ showLeaderboard = true }) {
                                   <p className="text-sm text-slate-900 dark:text-white">
                                     Challenge sent to <span className="font-semibold">{notif.opponentName}</span>!
                                   </p>
-                                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
                                     {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
                                   </p>
                                   <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
@@ -174,7 +174,7 @@ export default function Navbar({ showLeaderboard = true }) {
                                   <p className="text-sm text-slate-900 dark:text-white">
                                     <span className="font-semibold">{notif.fromName}</span> challenged you to a quiz!
                                   </p>
-                                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
                                     {notif.categoryName} · {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : ''}
                                   </p>
                                   <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
@@ -183,8 +183,10 @@ export default function Navbar({ showLeaderboard = true }) {
                                 </>
                               )}
                             </div>
-                            {!notif.read && (
+                            {!notif.read ? (
                               <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 mt-1.5" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0 mt-1" />
                             )}
                           </div>
                         </button>
@@ -209,12 +211,12 @@ export default function Navbar({ showLeaderboard = true }) {
             </Link>
           )}
 
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={handleLogout}
-            disabled={logoutLoading}
-            className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors cursor-pointer disabled:opacity-50"
-          >
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLogout}
+              disabled={logoutLoading}
+              className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer disabled:opacity-50"
+            >
             <LogOut className="w-4 h-4" />
             <span className="hidden sm:inline">Logout</span>
           </motion.button>

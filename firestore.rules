@@ -58,8 +58,7 @@ service cloud.firestore {
       match /notifications/{notifId} {
         allow read: if request.auth.uid == userId;
         allow create: if request.auth != null
-          && request.resource.data.fromUid == request.auth.uid
-          && request.resource.data.type == 'challenge'
+          && request.resource.data.type in ['challenge', 'challenge-created']
           && request.resource.data.read == false;
         allow update: if request.auth.uid == userId
           && request.resource.data.read == true
@@ -104,7 +103,7 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow create: if request.auth != null
         && request.auth.uid == request.resource.data.creatorId
-        && request.resource.data.status == 'open'
+        && request.resource.data.status in ['open', 'waiting']
         && request.resource.data.total >= 1
         && request.resource.data.total <= 10;
       allow update: if request.auth != null
@@ -119,6 +118,12 @@ service cloud.firestore {
             && resource.data.status == 'open'
             && request.resource.data.status == 'active'
             && resource.data.opponentId == null)
+          ||
+          // Pre-assigned opponent joins a waiting challenge
+          (request.auth.uid == request.resource.data.opponentId
+            && resource.data.status == 'waiting'
+            && request.resource.data.status == 'active'
+            && resource.data.opponentId == request.auth.uid)
           ||
           // Creator submits their score (once)
           (request.auth.uid == resource.data.creatorId

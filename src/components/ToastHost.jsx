@@ -35,7 +35,7 @@ export default function ToastHost() {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">{toast.title}</p>
                 {toast.description && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{toast.description}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{toast.description}</p>
                 )}
               </div>
               <button

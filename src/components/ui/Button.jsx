@@ -10,7 +10,7 @@ const VARIANT_CLASSES = {
   danger:
     'bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white shadow-sm',
   ghost:
-    'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300',
+    'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200',
 };
 
 const SIZE_CLASSES = {

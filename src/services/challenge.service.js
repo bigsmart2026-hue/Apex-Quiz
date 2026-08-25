@@ -14,7 +14,7 @@ const EXPIRES_DAYS = 7;
  * the winner is derived from the stored scores, never accepted from the client.
  */
 
-export async function createChallenge({ creator, category, questions, total }) {
+export async function createChallenge({ creator, category, questions, total, opponentId = null, opponentName = null }) {
   const code = generateChallengeCode();
   const ref = doc(collection(db, CHALLENGES_COLLECTION), code);
   const challenge = {
@@ -23,11 +23,11 @@ export async function createChallenge({ creator, category, questions, total }) {
     categoryName: category.name,
     questions,
     total,
-    status: 'open',
+    status: opponentId ? 'waiting' : 'open',
     creatorId: creator.uid,
     creatorName: creator.displayName,
-    opponentId: null,
-    opponentName: null,
+    opponentId,
+    opponentName,
     creatorScore: null,
     creatorAccuracy: null,
     opponentScore: null,
@@ -52,11 +52,13 @@ export async function joinChallenge(code, user) {
     if (!snap.exists()) throw new Error('Challenge not found');
     const challenge = snap.data();
 
-    if (challenge.status !== 'open') throw new Error('Challenge is no longer joinable');
+    if (challenge.status !== 'open' && challenge.status !== 'waiting') {
+      throw new Error('Challenge is no longer joinable');
+    }
+    if (challenge.creatorId === user.uid) throw new Error('You cannot join your own challenge');
     if (challenge.opponentId && challenge.opponentId !== user.uid) {
       throw new Error('Challenge already has two players');
     }
-    if (challenge.creatorId === user.uid) throw new Error('You cannot join your own challenge');
 
     tx.update(ref, {
       opponentId: user.uid,

@@ -14,7 +14,7 @@ import Modal from '../components/ui/Modal';
 import { categories } from '../utils/categories';
 import { questionBank } from '../utils/questionBank';
 import { createChallenge } from '../services/challenge.service';
-import { sendChallengeNotification, sendChallengeCreatedNotification } from '../services/notification.service';
+import { sendChallengeNotification } from '../services/notification.service';
 import { challengeShareUrl } from '../utils/challengeCode';
 import { seededSample } from '../utils/dates';
 
@@ -103,6 +103,8 @@ export default function LeaderboardPage() {
         category,
         questions,
         total: questionCount,
+        opponentId: challengeTarget?.uid || null,
+        opponentName: challengeTarget?.displayName || null,
       });
 
       if (challengeTarget?.uid) {
@@ -113,12 +115,6 @@ export default function LeaderboardPage() {
           categoryName: category.name,
         }).catch(() => {});
       }
-
-      sendChallengeCreatedNotification(user.uid, {
-        challengeCode: code,
-        opponentName: challengeTarget?.displayName || 'Friend',
-        categoryName: category.name,
-      }).catch(() => {});
 
       setCreatedCode(code);
     } catch (err) {
@@ -166,7 +162,7 @@ export default function LeaderboardPage() {
             <h1 className="text-3xl sm:text-4xl text-slate-900 dark:text-white font-heading">
               Leaderboard
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+            <p className="text-slate-600 dark:text-slate-400 text-sm">
               {leaderboardTab === 'weekly'
                 ? 'Most XP earned this week'
                 : 'Top players by total XP'}
@@ -273,7 +269,7 @@ export default function LeaderboardPage() {
                         <Avatar src={entry.photoURL} name={entry.displayName} size={32} />
                         <span
                           className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-xl border-2 border-white dark:border-slate-800 ${
-                            entry.isOnline ? 'bg-emerald-400' : 'bg-slate-300 dark:bg-slate-600'
+                            entry.isOnline ? 'bg-amber-400' : 'bg-slate-300 dark:bg-slate-600'
                           }`}
                           title={entry.isOnline ? 'Online' : 'Offline'}
                         />
@@ -287,7 +283,7 @@ export default function LeaderboardPage() {
                       <Badge variant="slate">LVL {entry.level}</Badge>
                       <span className="text-sm font-bold text-slate-900 dark:text-white tabular-nums w-20 text-right">
                         {leaderboardTab === 'weekly' ? entry.weeklyXp : entry.xp}
-                        <span className="text-xs font-medium text-slate-400 dark:text-slate-500"> XP</span>
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-500"> XP</span>
                       </span>
 
                       {!isCurrentUser && (
@@ -316,7 +312,7 @@ export default function LeaderboardPage() {
       >
         {createdCode ? (
           <div className="text-center space-y-4">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Share this code or link with {challengeTarget?.displayName}:
             </p>
             <div className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-300 dark:border-amber-700 font-bold text-2xl tracking-[0.35em] text-slate-900 dark:text-white">
@@ -337,7 +333,7 @@ export default function LeaderboardPage() {
               <p className="text-sm text-rose-600 dark:text-rose-400 text-center">{challengeError}</p>
             )}
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                 Category
               </label>
               <select
@@ -353,7 +349,7 @@ export default function LeaderboardPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                 Questions
               </label>
               <div className="flex gap-2 mt-1">

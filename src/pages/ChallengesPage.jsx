@@ -128,7 +128,7 @@ export default function ChallengesPage() {
             <h1 className="text-3xl sm:text-4xl text-slate-900 dark:text-white font-heading">
               Friend Challenges
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+            <p className="text-slate-600 dark:text-slate-400 text-sm">
               Challenge a friend and see who knows more
             </p>
           </motion.div>
@@ -152,7 +152,7 @@ export default function ChallengesPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                   Category
                 </label>
                 <select
@@ -169,7 +169,7 @@ export default function ChallengesPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                   Questions
                 </label>
                 <div className="flex gap-2 mt-1">
@@ -200,7 +200,7 @@ export default function ChallengesPage() {
                 <Link2 className="w-5 h-5 text-amber-500" />
                 <h2 className="font-heading text-slate-900 dark:text-white">Join a challenge</h2>
               </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 Enter the 6-character code from a friend.
               </p>
               <input
@@ -236,7 +236,7 @@ export default function ChallengesPage() {
       {/* Share modal */}
       <Modal open={shareModalOpen} onClose={() => setShareModalOpen(false)} title="Challenge created!">
         <div className="text-center space-y-4">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Share this code or link with a friend:
           </p>
           <div className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-300 dark:border-amber-700 font-bold text-2xl tracking-[0.35em] text-slate-900 dark:text-white">
@@ -250,7 +250,7 @@ export default function ChallengesPage() {
               Done
             </Button>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-500">
             The challenge expires in 7 days. Winner takes the bragging rights.
           </p>
         </div>
