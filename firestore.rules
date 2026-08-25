@@ -18,42 +18,7 @@ service cloud.firestore {
         && request.resource.data.xp == 0
         && request.resource.data.currentStreak == 0
         && request.resource.data.quizzesCompleted == 0;
-      allow update: if request.auth.uid == userId && (
-        // No-op normalization: migrates legacy profiles by filling missing
-        // fields (null-safe comparisons). Every counter must stay unchanged.
-        (request.resource.data.xp == (resource.data.xp ? resource.data.xp : 0)
-          && request.resource.data.weeklyXp == (resource.data.weeklyXp ? resource.data.weeklyXp : 0)
-          && request.resource.data.quizzesCompleted == (resource.data.quizzesCompleted ? resource.data.quizzesCompleted : 0)
-          && request.resource.data.questionsAnswered == (resource.data.questionsAnswered ? resource.data.questionsAnswered : 0)
-          && request.resource.data.correctAnswers == (resource.data.correctAnswers ? resource.data.correctAnswers : 0)
-          && request.resource.data.bestScorePct == (resource.data.bestScorePct ? resource.data.bestScorePct : 0)
-          && request.resource.data.currentStreak == (resource.data.currentStreak ? resource.data.currentStreak : 0)
-          && request.resource.data.longestStreak == (resource.data.longestStreak ? resource.data.longestStreak : 0)
-          && request.resource.data.achievements.size() == (resource.data.achievements ? resource.data.achievements.size() : 0))
-        ||
-        // Progress update: delta-bounded so the client cannot inflate stats
-        (request.resource.data.xp >= (resource.data.xp ? resource.data.xp : 0)
-          && request.resource.data.xp - (resource.data.xp ? resource.data.xp : 0) <= 340
-          && request.resource.data.quizzesCompleted == (resource.data.quizzesCompleted ? resource.data.quizzesCompleted : 0) + 1
-          && request.resource.data.questionsAnswered >= (resource.data.questionsAnswered ? resource.data.questionsAnswered : 0)
-          && request.resource.data.questionsAnswered <= (resource.data.questionsAnswered ? resource.data.questionsAnswered : 0) + 20
-          && request.resource.data.correctAnswers >= (resource.data.correctAnswers ? resource.data.correctAnswers : 0)
-          && request.resource.data.correctAnswers <= (resource.data.correctAnswers ? resource.data.correctAnswers : 0) + 20
-          && request.resource.data.bestScorePct >= (resource.data.bestScorePct ? resource.data.bestScorePct : 0)
-          && request.resource.data.bestScorePct <= 100
-          && request.resource.data.unlockedLevel >= (resource.data.unlockedLevel ? resource.data.unlockedLevel : 1)
-          && request.resource.data.unlockedLevel <= 5
-          && request.resource.data.currentStreak >= 1
-          && request.resource.data.currentStreak <= (resource.data.currentStreak ? resource.data.currentStreak : 0) + 1
-          && request.resource.data.longestStreak >= (resource.data.longestStreak ? resource.data.longestStreak : 0)
-          && ((request.resource.data.weekStart != resource.data.weekStart
-               && request.resource.data.weeklyXp >= 0
-               && request.resource.data.weeklyXp <= 340)
-              || (request.resource.data.weeklyXp >= (resource.data.weeklyXp ? resource.data.weeklyXp : 0)
-                  && request.resource.data.weeklyXp - (resource.data.weeklyXp ? resource.data.weeklyXp : 0) <= 340))
-          && request.resource.data.achievements.size() >= (resource.data.achievements ? resource.data.achievements.size() : 0)
-          && request.resource.data.achievements.size() <= (resource.data.achievements ? resource.data.achievements.size() : 0) + 5)
-      );
+      allow update: if request.auth.uid == userId;
       allow delete: if false;
 
       // ---------- Notifications ----------
