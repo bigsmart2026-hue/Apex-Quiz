@@ -93,7 +93,8 @@ service cloud.firestore {
           && request.resource.data.masteryPercentage >= 0
           && request.resource.data.masteryPercentage <= 100
           && request.resource.data.levelsUnlocked is map
-          && request.resource.data.levelsUnlocked["1"] == true;
+          && request.resource.data.levelsUnlocked["1"] == true
+          && request.resource.data.seenQuestionHashes is list;
         allow update: if request.auth.uid == userId
           // Level can only increase by at most 1, max 4
           && request.resource.data.currentLevel >= resource.data.currentLevel
@@ -124,6 +125,9 @@ service cloud.firestore {
           && request.resource.data.quizzesCompleted <= resource.data.quizzesCompleted + 1
           // Levels unlocked map can only grow
           && request.resource.data.levelsUnlocked is map
+          // Seen question hashes array (for avoiding repeats)
+          && request.resource.data.seenQuestionHashes is list
+          && request.resource.data.seenQuestionHashes.size() <= 600
           // lastPlayedAt is always overwritten
           && request.resource.data.lastPlayedAt is timestamp;
         allow delete: if false;

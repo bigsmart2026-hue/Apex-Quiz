@@ -21,6 +21,7 @@ const DEFAULT_CATEGORY_PROGRESS = {
   lastPlayedAt: null,
   quizzesCompleted: 0,
   levelsUnlocked: { 1: true },
+  seenQuestionHashes: [],
 };
 
 export async function getCategoryProgress(uid, categoryId) {
@@ -30,7 +31,7 @@ export async function getCategoryProgress(uid, categoryId) {
   return { ...DEFAULT_CATEGORY_PROGRESS, ...snap.data() };
 }
 
-export async function saveCategoryProgress(uid, categoryId, result) {
+export async function saveCategoryProgress(uid, categoryId, result, newHashes = []) {
   const ref = doc(db, USERS_COLLECTION, uid, 'categoryProgress', categoryId);
   const current = await getCategoryProgress(uid, categoryId);
 
@@ -48,6 +49,10 @@ export async function saveCategoryProgress(uid, categoryId, result) {
   const newLevel = result.leveledUp ? result.newLevel : current.currentLevel;
   const newHighest = Math.max(current.highestLevel, newLevel);
 
+  // Keep last 200 seen hashes to avoid duplicates, cap at 500
+  const prevHashes = Array.isArray(current.seenQuestionHashes) ? current.seenQuestionHashes : [];
+  const seenQuestionHashes = [...new Set([...prevHashes, ...newHashes])].slice(-500);
+
   const updated = {
     currentLevel: newLevel,
     highestLevel: newHighest,
@@ -60,6 +65,7 @@ export async function saveCategoryProgress(uid, categoryId, result) {
     quizzesCompleted: current.quizzesCompleted + 1,
     masteryPercentage: masteryPct,
     levelsUnlocked,
+    seenQuestionHashes,
   };
 
   await setDoc(ref, updated, { merge: true });

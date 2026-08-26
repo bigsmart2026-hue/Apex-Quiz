@@ -92,22 +92,29 @@ async function fetchFromExternalProvider(providerName, config, difficulty, amoun
 /**
  * Main entry point: get quiz questions for a category and user level.
  * Randomly rotates through available API providers.
+ * Filters out questions the user has already seen.
  */
-export async function getQuizQuestions({ categoryId, userLevel = 1, amount = 10 }) {
+export async function getQuizQuestions({ categoryId, userLevel = 1, amount = 10, seenHashes = [] }) {
   const config = getCategoryConfig(categoryId);
   if (!config) throw new Error(`Unknown category: ${categoryId}`);
 
   const difficulty = getDifficultyForLevel(userLevel);
-  const sessionHashes = new Set();
+  const sessionHashes = new Set(seenHashes);
   let questions = [];
 
   // Step 1: Try Firestore cache first (always reliable)
   try {
-    const cached = await fetchFirestoreQuestions({ categoryId, difficulty, amount: amount + 10 });
+    const cached = await fetchFirestoreQuestions({ categoryId, difficulty, amount: amount + 20 });
     const valid = cached.filter((q) => validateQuestion(q));
     const deduped = deduplicateById(valid);
-    questions = deduped.slice(0, amount);
-    questions.forEach((q) => sessionHashes.add(computeQuestionHash(q.text, q.options)));
+    // Filter out questions the user has already seen
+    const fresh = deduped.filter((q) => {
+      const hash = computeQuestionHash(q.text, q.options);
+      if (sessionHashes.has(hash)) return false;
+      sessionHashes.add(hash);
+      return true;
+    });
+    questions = fresh.slice(0, amount);
   } catch {
     // Firestore cache miss
   }
@@ -120,7 +127,7 @@ export async function getQuizQuestions({ categoryId, userLevel = 1, amount = 10 
       if (questions.length >= amount) break;
       try {
         const apiQuestions = await fetchFromExternalProvider(
-          providerName, config, difficulty, amount - questions.length
+          providerName, config, difficulty, amount - questions.length + 5
         );
         const fresh = apiQuestions.filter((q) => {
           const hash = computeQuestionHash(q.text, q.options);
@@ -147,7 +154,7 @@ export async function getQuizQuestions({ categoryId, userLevel = 1, amount = 10 
     for (const fallback of fallbackDifficulties) {
       if (questions.length >= amount) break;
       try {
-        const more = await fetchFirestoreQuestions({ categoryId, difficulty: fallback, amount: amount - questions.length });
+        const more = await fetchFirestoreQuestions({ categoryId, difficulty: fallback, amount: amount - questions.length + 5 });
         const valid = more.filter((q) => validateQuestion(q));
         const deduped = deduplicateById(valid).filter((q) => {
           const hash = computeQuestionHash(q.text, q.options);

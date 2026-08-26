@@ -123,10 +123,12 @@ const useQuizStore = create(
         const { questionCount, timerDuration } = getQuizConfig(userLevel);
 
         try {
+          const seenHashes = progress?.seenQuestionHashes || [];
           const questions = await getQuizQuestions({
             categoryId,
             userLevel,
             amount: questionCount,
+            seenHashes,
           });
 
           const difficulty = questions[0]?.difficulty || 'easy';
@@ -245,7 +247,16 @@ const useQuizStore = create(
             isDaily,
           });
 
-          saveCategoryProgress(user.uid, category.id, quizResult).catch(() => {});
+          // Track seen question hashes to avoid repeats
+          const computeHash = (text, opts) => {
+            const key = text.toLowerCase().trim() + opts.map((o) => o.toLowerCase().trim()).sort().join('|');
+            let h = 0;
+            for (let i = 0; i < key.length; i++) h = ((h << 5) - h + key.charCodeAt(i)) | 0;
+            return String(h);
+          };
+          const newHashes = questions.map((q) => computeHash(q.text, q.options));
+
+          saveCategoryProgress(user.uid, category.id, quizResult, newHashes).catch(() => {});
 
           set({
             completionSummary: {
