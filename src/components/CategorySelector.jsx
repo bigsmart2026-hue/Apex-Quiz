@@ -205,7 +205,7 @@ export default function CategorySelector() {
                           {category.name}
                         </p>
                         <p className="text-xs text-slate-600 dark:text-slate-400">
-                          {levelName} · {config?.provider === 'firestore' ? 'Apex Bank' : config?.provider === 'quizapi' ? 'QuizAPI' : 'Open Trivia'}
+                          {levelName} · {config?.providers?.length > 1 ? 'Multi-source' : config?.providers?.[0] === 'triviaapi' ? 'Trivia API' : config?.providers?.[0] === 'quizapi' ? 'QuizAPI' : config?.providers?.[0] === 'opentdb' ? 'Open Trivia' : 'Apex Bank'}
                         </p>
                       </div>
                     </div>

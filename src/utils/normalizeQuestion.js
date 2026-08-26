@@ -59,3 +59,28 @@ export function normalizeFirestoreQuestion(doc) {
     explanation: data.explanation || '',
   };
 }
+
+/**
+ * Normalize The Trivia API question.
+ */
+export function normalizeTriviaApiQuestion(raw) {
+  const allAnswers = [
+    ...(raw.correctAnswer ? [raw.correctAnswer] : []),
+    ...(raw.incorrectAnswers || []),
+  ].filter(Boolean);
+  const options = allAnswers.map(decodeHtmlEntities);
+  const correctIdx = raw.correctAnswer
+    ? options.findIndex((o) => o.toLowerCase().trim() === decodeHtmlEntities(raw.correctAnswer).toLowerCase().trim())
+    : 0;
+  return {
+    id: genId(),
+    text: decodeHtmlEntities(raw.question || ''),
+    options,
+    correctAnswer: correctIdx >= 0 ? correctIdx : 0,
+    difficulty: raw.difficulty?.toLowerCase() || 'medium',
+    category: raw.category || '',
+    source: 'triviaapi',
+    sourceId: raw.id || '',
+    explanation: raw.correctAcceptableResponses?.[0]?.text || '',
+  };
+}
