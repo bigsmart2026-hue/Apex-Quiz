@@ -1,0 +1,22 @@
+{
+  "name": "Apex Quiz",
+  "short_name": "Apex Quiz",
+  "description": "Timed trivia across 12 categories. Compete for the top of the leaderboard.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images-removebg-preview.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images-removebg-preview.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
