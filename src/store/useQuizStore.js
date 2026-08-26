@@ -185,6 +185,20 @@ const useQuizStore = create(
 
         set({ isFinished: true, score: finalScore, savingResult: true });
 
+        if (!user?.uid) {
+          console.error('[quiz] user not authenticated — cannot save');
+          set({
+            completionSummary: {
+              xpGained: 0, level: null, leveledUp: false, streak: null,
+              newAchievements: [], accuracyPct: getAccuracy(finalScore, total),
+              timeTakenMs, avgAnswerSec, totalAnswered: total, correctAnswers: finalScore,
+              error: 'Not signed in — result saved locally only.',
+            },
+            savingResult: false,
+          });
+          return;
+        }
+
         try {
           if (challenge) {
             const isCreator = challenge.creatorId === user.uid;

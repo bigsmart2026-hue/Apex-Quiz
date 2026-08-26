@@ -151,7 +151,7 @@ export default function QuizPage() {
                   questionNumber={currentIndex + 1}
                   totalQuestions={questions.length}
                 />
-                <p className="mt-6 text-center text-xs text-slate-600 dark:text-slate-400">
+                <p className="mt-6 text-center text-xs text-slate-600 dark:text-slate-400 hidden sm:block">
                   Tip: press <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 font-semibold">1</kbd>–
                   <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 font-semibold">4</kbd> to answer,{' '}
                   <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 font-semibold">Enter</kbd> to continue

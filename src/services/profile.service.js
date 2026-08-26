@@ -172,7 +172,7 @@ export async function recordQuizCompletion(user, category, params) {
       });
     }
 
-    tx.update(userRef, {
+    tx.set(userRef, {
       displayName: user.displayName,
       xp: newXp,
       unlockedLevel: newUnlockedLevel,
@@ -188,7 +188,7 @@ export async function recordQuizCompletion(user, category, params) {
       achievements,
       categoryStats,
       updatedAt: serverTimestamp(),
-    });
+    }, { merge: true });
 
     return {
       xpGained,

@@ -13,9 +13,9 @@ export default function QuestionCard({ question, selectedAnswer, onSelect, quest
   const hasAnswered = selectedAnswer !== null;
 
   const variants = {
-    enter: { x: 320, opacity: 0 },
+    enter: { x: 60, opacity: 0 },
     center: { x: 0, opacity: 1 },
-    exit: { x: -320, opacity: 0 },
+    exit: { x: -60, opacity: 0 },
   };
 
   return (

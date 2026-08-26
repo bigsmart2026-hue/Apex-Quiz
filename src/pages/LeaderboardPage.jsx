@@ -78,6 +78,15 @@ export default function LeaderboardPage() {
     };
   }, [fetchLeaderboard, leaderboardTab]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchLeaderboard(leaderboardTab);
+      }
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchLeaderboard, leaderboardTab]);
+
   const myRank = leaderboard.findIndex((e) => e.uid === user?.uid);
 
   const openChallenge = useCallback((entry) => {

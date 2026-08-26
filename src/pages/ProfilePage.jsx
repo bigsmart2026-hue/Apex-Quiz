@@ -60,7 +60,7 @@ export default function ProfilePage() {
                   </Badge>
                 </div>
               </div>
-              <div className="w-full sm:w-48">
+              <div className="w-full sm:w-48 flex-shrink-0">
                 <ProgressBar value={levelInfo.progress} label="Level progress" />
                 <p className="text-xs text-slate-600 dark:text-slate-400 text-right mt-1 tabular-nums">
                   {levelInfo.xp.toLocaleString()} XP{levelInfo.xpToNext > 0 ? ` · ${levelInfo.xpToNext} to next` : ''}

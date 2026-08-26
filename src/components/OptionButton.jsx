@@ -37,7 +37,7 @@ export default function OptionButton({ text, index, isSelected, isCorrect, showF
       whileTap={!disabled ? { scale: 0.97 } : undefined}
       onClick={onClick}
       disabled={disabled}
-      className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-4 ${disabled ? 'cursor-default' : 'cursor-pointer'} ${borderStyle}`}
+      className={`w-full text-left p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-3 sm:gap-4 ${disabled ? 'cursor-default' : 'cursor-pointer'} ${borderStyle}`}
     >
       <span className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors duration-200 ${letterStyle}`}>
         {letter}
