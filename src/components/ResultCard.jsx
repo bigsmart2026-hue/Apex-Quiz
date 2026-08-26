@@ -1,18 +1,18 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, XCircle, ChevronDown } from 'lucide-react';
 
-/**
- * Collapsible per-question review card.
- * @param {Object} props
- * @param {{ id: string, text: string, options: string[], correctAnswer: number }} props.question
- * @param {number|undefined} props.selectedAnswer
- * @param {number} props.index
- * @param {boolean} props.expanded
- * @param {() => void} props.onToggle
- */
+const DIFFICULTY_COLORS = {
+  easy: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  hard: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+  master: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+};
+
 export default function ResultCard({ question, selectedAnswer, index, expanded, onToggle }) {
   const answered = selectedAnswer !== undefined;
   const isCorrect = answered && selectedAnswer === question.correctAnswer;
+  const points = question.points || 10;
+  const earned = isCorrect ? points : 0;
 
   return (
     <motion.div
@@ -45,13 +45,21 @@ export default function ResultCard({ question, selectedAnswer, index, expanded, 
           <span className="text-slate-900 dark:text-slate-100 text-sm sm:text-base font-heading block">
             {question.text}
           </span>
+          <span className="flex items-center gap-2 mt-1">
+            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${DIFFICULTY_COLORS[question.difficulty] || DIFFICULTY_COLORS.easy}`}>
+              {question.difficulty || 'easy'}
+            </span>
+            <span className={`text-xs font-semibold ${isCorrect ? 'text-emerald-600 dark:text-emerald-400' : answered ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
+              {isCorrect ? `+${earned}pts` : '0pts'}
+            </span>
+          </span>
           <span
             className={`text-xs font-semibold mt-0.5 inline-block ${
               isCorrect
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : answered
                   ? 'text-rose-600 dark:text-rose-400'
-                  : 'text-slate-600 dark:text-slate-400'
+                  : 'text-slate-500 dark:text-slate-400'
             }`}
           >
             {isCorrect ? <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Correct</span> : answered ? <span className="inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Incorrect</span> : '— Not answered'}
@@ -82,6 +90,11 @@ export default function ResultCard({ question, selectedAnswer, index, expanded, 
               {!isCorrect && (
                 <p className="text-emerald-600 dark:text-emerald-400 font-medium">
                   Correct answer: {question.options[question.correctAnswer]}
+                </p>
+              )}
+              {question.explanation && (
+                <p className="text-slate-500 dark:text-slate-400 text-xs mt-2 italic">
+                  {question.explanation}
                 </p>
               )}
             </div>

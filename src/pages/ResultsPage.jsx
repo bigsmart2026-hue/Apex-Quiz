@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { RotateCcw, Flame, Timer, Target, Swords, Award } from 'lucide-react';
+import { RotateCcw, Flame, Timer, Target, Swords, Award, Zap, Star } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import useQuizStore from '../store/useQuizStore';
+import { CATEGORY_LEVELS } from '../config/levels';
 import Navbar from '../components/Navbar';
 import ResultCard from '../components/ResultCard';
 import Confetti from '../components/Confetti';
@@ -121,14 +122,10 @@ export default function ResultsPage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
               <StatCard
-                label="XP earned"
-                value={completionSummary?.xpGained ? `+${completionSummary.xpGained}` : '—'}
-                icon={<Target className="w-5 h-5" />}
-                sub={completionSummary?.levelCompleted
-                  ? `Level ${completionSummary.unlockedLevel} unlocked!`
-                  : completionSummary?.leveledUp
-                    ? `Level up to ${completionSummary.level}!`
-                    : undefined}
+                label="Points"
+                value={completionSummary?.totalPoints != null ? `+${completionSummary.totalPoints}` : '—'}
+                icon={<Zap className="w-5 h-5" />}
+                sub={completionSummary?.difficulty ? `${completionSummary.difficulty}` : undefined}
               />
               <StatCard
                 label="Streak"
@@ -147,6 +144,45 @@ export default function ResultsPage() {
                 icon={<Target className="w-5 h-5" />}
               />
             </div>
+
+            {/* Level progression */}
+            {completionSummary?.passed !== undefined && (
+              <div className={`mt-4 p-4 rounded-xl text-center ${
+                completionSummary.leveledUp
+                  ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
+                  : completionSummary.passed
+                    ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
+                    : 'bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600'
+              }`}>
+                {completionSummary.leveledUp ? (
+                  <>
+                    <p className="text-2xl mb-1">
+                      <Star className="w-6 h-6 text-emerald-500 inline" />
+                    </p>
+                    <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                      Level {completionSummary.newLevel} Unlocked!
+                    </p>
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                      {CATEGORY_LEVELS[completionSummary.newLevel]?.name} — {CATEGORY_LEVELS[completionSummary.newLevel]?.description}
+                    </p>
+                  </>
+                ) : completionSummary.passed ? (
+                  <>
+                    <p className="text-sm font-bold text-amber-700 dark:text-amber-400">Level passed!</p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                      You scored {accuracy}% — keep playing to unlock the next level.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Keep practicing!</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                      You scored {accuracy}%. You need {completionSummary.requiredPct}% to unlock the next level.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
 
             {completionSummary?.newAchievements?.length > 0 && (
               <div className="mt-4 flex flex-wrap justify-center gap-2">

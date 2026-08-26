@@ -1,16 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { fetchTriviaQuestions } from '../services/triviaApi';
-import { fetchQuiz } from '../services/firestore.service';
 import { recordQuizCompletion } from '../services/profile.service';
 import { submitChallengeScore } from '../services/challenge.service';
-import { questionBank, getQuestionsForLevel } from '../utils/questionBank';
+import { getQuizQuestions } from '../services/quiz/questionEngine';
+import { scoreQuiz } from '../services/quiz/scoringService';
+import {
+  getCategoryProgress,
+  saveCategoryProgress,
+} from '../services/quiz/progressService';
 import { TIMER_DURATION, getQuizConfig } from '../utils/constants';
 import { shuffleArray, shuffleQuestionOptions } from '../utils/shuffleArray';
 import { toDateKey } from '../utils/dates';
 import { getAccuracy } from '../utils/progression';
 import { toast } from './useToastStore';
 import { useProfileStore } from './useProfileStore';
+import { getCategoryConfig } from '../config/categories';
 
 const initialState = {
   user: null,
@@ -33,22 +37,8 @@ const initialState = {
   leaderboardTab: 'global',
   leaderboardError: null,
   savingResult: false,
-};
-
-const normalizeBankKey = (categoryName) => {
-  const nameLower = categoryName.toLowerCase();
-  const bankMap = {
-    'relationship quiz': 'relationships',
-    'front-end development': 'frontend',
-    'back-end development': 'backend',
-    'current affairs': 'currentAffairs',
-    'cybersecurity': 'cybersecurity',
-    'digital marketing': 'digitalMarketing',
-    'product design': 'productDesign',
-    'data analytics': 'dataAnalytics',
-    'mobile app development': 'mobileAppDev',
-  };
-  return bankMap[nameLower] || nameLower.replace(/[\s-]+/g, '');
+  categoryProgress: null,
+  currentDifficulty: 'easy',
 };
 
 const applyQuestions = (set, questions, timerDuration = TIMER_DURATION, extra = {}) =>
@@ -105,40 +95,50 @@ const useQuizStore = create(
       clearChallenge: () => set({ challenge: null, isDaily: false }),
 
       /**
-       * Loads questions for a category. Order: Open Trivia DB -> local bank -> Firestore.
-       * Local bank questions are filtered by the player's unlocked level.
+       * Loads questions for a category using the centralized question engine.
+       * Reads per-category progress to determine difficulty level.
        */
-      fetchQuestions: async (apiId, categoryName) => {
+      fetchQuestions: async (categoryId, categoryName) => {
         set({ isLoading: true, error: null, timer: TIMER_DURATION, isDaily: false, challenge: null });
 
-        if (apiId) {
-          try {
-            const questions = await fetchTriviaQuestions(apiId);
-            applyQuestions(set, questions);
-            return;
-          } catch {
-            // fall through to local bank / Firestore
-          }
-        }
-
-        const bankKey = normalizeBankKey(categoryName);
-        const localBank = questionBank[bankKey];
-        if (localBank?.length) {
-          const { useProfileStore } = await import('./useProfileStore');
-          const playerLevel = useProfileStore.getState().profile?.unlockedLevel || 1;
-          const { questionCount, timerDuration } = getQuizConfig(playerLevel);
-          const filtered = getQuestionsForLevel(localBank, playerLevel);
-          const limited = filtered.slice(0, questionCount);
-          applyQuestions(set, limited.length ? limited : localBank.slice(0, questionCount), timerDuration);
+        const { user } = get();
+        const config = getCategoryConfig(categoryId);
+        if (!config) {
+          set({ error: `Unknown category: ${categoryName}`, isLoading: false });
           return;
         }
 
+        let userLevel = 1;
+        let progress = null;
+
+        if (user?.uid) {
+          try {
+            progress = await getCategoryProgress(user.uid, categoryId);
+            userLevel = progress.currentLevel || 1;
+          } catch {
+            // Use default level 1
+          }
+        }
+
+        const { questionCount, timerDuration } = getQuizConfig(userLevel);
+
         try {
-          const quiz = await fetchQuiz(categoryName);
-          if (!quiz.questions?.length) throw new Error('No questions found for this category');
-          applyQuestions(set, quiz.questions);
+          const questions = await getQuizQuestions({
+            categoryId,
+            userLevel,
+            amount: questionCount,
+          });
+
+          const difficulty = questions[0]?.difficulty || 'easy';
+          applyQuestions(set, questions, timerDuration, {
+            categoryProgress: progress,
+            currentDifficulty: difficulty,
+          });
         } catch (err) {
-          set({ error: err.message || 'Failed to load questions', isLoading: false });
+          const msg = err.message === 'NO_QUESTIONS_AVAILABLE'
+            ? "We couldn't load questions for this category. Please try again later or choose another category."
+            : 'Failed to load questions. Please try again.';
+          set({ error: msg, isLoading: false });
         }
       },
 
@@ -163,11 +163,13 @@ const useQuizStore = create(
 
       /**
        * Advances the quiz. On the final question, finishes the quiz and
-       * records the completion (attempt doc + profile update) through
-       * the trusted profile service.
+       * records the completion using per-category progress + XP system.
        */
       goToNext: async () => {
-        const { questions, currentIndex, selectedAnswers, user, category, startedAt, isDaily, challenge } = get();
+        const {
+          questions, currentIndex, selectedAnswers, user, category,
+          startedAt, isDaily, challenge, categoryProgress,
+        } = get();
         const isLast = currentIndex === questions.length - 1;
 
         if (!isLast) {
@@ -217,25 +219,23 @@ const useQuizStore = create(
               myWon = winner === (isCreator ? 'creator' : 'opponent');
               opponentScore = isCreator ? updated?.opponentScore : updated?.creatorScore;
             } catch {
-              // comparison unavailable — show neutral result
+              // comparison unavailable
             }
 
             set({
               completionSummary: {
-                xpGained: 0,
-                level: null,
-                leveledUp: false,
-                streak: null,
-                newAchievements: [],
-                accuracyPct: getAccuracy(finalScore, total),
-                timeTakenMs,
-                avgAnswerSec,
+                xpGained: 0, level: null, leveledUp: false, streak: null,
+                newAchievements: [], accuracyPct: getAccuracy(finalScore, total),
+                timeTakenMs, avgAnswerSec,
                 challenge: { ...challenge, won: myWon, opponentScore, myScore: finalScore },
               },
               savingResult: false,
             });
             return;
           }
+
+          const currentLevel = categoryProgress?.currentLevel || 1;
+          const quizResult = scoreQuiz(selectedAnswers, questions, currentLevel);
 
           const summary = await recordQuizCompletion(user, category, {
             score: finalScore,
@@ -245,34 +245,38 @@ const useQuizStore = create(
             isDaily,
           });
 
+          saveCategoryProgress(user.uid, category.id, quizResult).catch(() => {});
+
           set({
             completionSummary: {
               ...summary,
+              ...quizResult,
               timeTakenMs,
               avgAnswerSec,
               totalAnswered: total,
               correctAnswers: finalScore,
               dateKey: toDateKey(),
+              totalPoints: quizResult.totalPoints,
             },
             savingResult: false,
           });
 
           useProfileStore.getState().applyCompletion(get().completionSummary);
 
-          if (summary.levelCompleted) {
-            const { LEVELS } = await import('../utils/progression');
-            const nextLevelInfo = LEVELS.find((l) => l.level === summary.unlockedLevel);
+          if (quizResult.leveledUp) {
+            const { CATEGORY_LEVELS } = await import('../config/levels');
+            const nextLevelInfo = CATEGORY_LEVELS[quizResult.newLevel];
             toast.success(
-              `Level ${summary.unlockedLevel} Unlocked!`,
+              `Level ${quizResult.newLevel} Unlocked!`,
               `${nextLevelInfo?.name || 'Next level'} — ${nextLevelInfo?.description || ''}`
             );
           } else if (summary.xpGained > 0) {
             toast.success(
               isDaily ? 'Daily challenge complete!' : 'Quiz complete!',
-              `+${summary.xpGained} XP${summary.leveledUp ? ` · Level ${summary.level} — ${summary.levelName}!` : ''}`
+              `+${summary.xpGained} XP${summary.leveledUp ? ` · Level ${summary.level}!` : ''}`
             );
           }
-          if (summary.newAchievements.length > 0) {
+          if (summary.newAchievements?.length > 0) {
             summary.newAchievements.forEach((id) => {
               toast.achievement('Achievement unlocked', id.split('-').join(' '));
             });
@@ -282,16 +286,9 @@ const useQuizStore = create(
           const alreadyPlayed = err.message === 'QUIZ_ALREADY_PLAYED';
           set({
             completionSummary: {
-              xpGained: 0,
-              level: null,
-              leveledUp: false,
-              streak: null,
-              newAchievements: [],
-              accuracyPct: getAccuracy(finalScore, total),
-              timeTakenMs,
-              avgAnswerSec,
-              totalAnswered: total,
-              correctAnswers: finalScore,
+              xpGained: 0, level: null, leveledUp: false, streak: null,
+              newAchievements: [], accuracyPct: getAccuracy(finalScore, total),
+              timeTakenMs, avgAnswerSec, totalAnswered: total, correctAnswers: finalScore,
               dateKey: toDateKey(),
               error: alreadyPlayed
                 ? 'You already played this quiz today — no extra XP awarded.'
@@ -313,7 +310,7 @@ const useQuizStore = create(
           set({
             leaderboard: [],
             leaderboardError: err?.code === 'permission-denied'
-              ? 'Leaderboard access denied — deploy the Firestore security rules (firebase deploy --only firestore:rules).'
+              ? 'Leaderboard access denied — deploy the Firestore security rules.'
               : 'Something went wrong while loading the leaderboard.',
           });
         }

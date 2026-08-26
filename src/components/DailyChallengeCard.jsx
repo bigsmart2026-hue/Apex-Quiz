@@ -1,23 +1,38 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flame } from 'lucide-react';
+import { Flame, Loader2 } from 'lucide-react';
 import { toDateKey } from '../utils/dates';
 import { getDailyChallenge, DAILY_QUESTION_COUNT } from '../utils/dailyChallenge';
 import useQuizStore from '../store/useQuizStore';
+import { useProfileStore } from '../store/useProfileStore';
 import Card from './ui/Card';
 import Button from './ui/Button';
 
-/**
- * Daily challenge entry point. Deterministic per day, 2x XP.
- */
 export default function DailyChallengeCard({ completedToday = false, streak = 0 }) {
   const navigate = useNavigate();
   const setDailyChallenge = useQuizStore((s) => s.setDailyChallenge);
+  const [loading, setLoading] = useState(false);
   const { category } = getDailyChallenge(toDateKey());
+  const profile = useProfileStore((s) => s.profile);
 
-  const handleStart = () => {
-    const { questions } = getDailyChallenge(toDateKey());
-    setDailyChallenge(category, questions);
-    navigate('/quiz');
+  const handleStart = async () => {
+    setLoading(true);
+    try {
+      const { getQuizQuestions } = await import('../services/quiz/questionEngine');
+      const userLevel = profile?.unlockedLevel || 1;
+      const questions = await getQuizQuestions({
+        categoryId: category.id,
+        userLevel,
+        amount: DAILY_QUESTION_COUNT,
+      });
+      setDailyChallenge(category, questions);
+      navigate('/quiz');
+    } catch {
+      setDailyChallenge(category, []);
+      navigate('/quiz');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,10 +59,12 @@ export default function DailyChallengeCard({ completedToday = false, streak = 0 
 
         <Button
           onClick={handleStart}
-          disabled={completedToday}
+          disabled={completedToday || loading}
           size="md"
         >
-          {completedToday ? 'Completed today' : 'Start Challenge'}
+          {loading ? (
+            <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</span>
+          ) : completedToday ? 'Completed today' : 'Start Challenge'}
         </Button>
       </div>
     </Card>

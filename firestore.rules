@@ -8,6 +8,17 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ---------- Cached questions ----------
+    match /questions/{questionId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.categoryId is string
+        && request.resource.data.text is string
+        && request.resource.data.options is list
+        && request.resource.data.active == true;
+      allow update, delete: if false;
+    }
+
     // ---------- User profiles ----------
     // Readable by any authenticated user (powers the leaderboard).
     // Only the owner may create/update. XP, streaks and stats are
@@ -30,6 +41,13 @@ service cloud.firestore {
         allow update: if request.auth.uid == userId
           && request.resource.data.read == true
           && resource.data.read == false;
+        allow delete: if false;
+      }
+
+      // ---------- Category progress ----------
+      match /categoryProgress/{categoryId} {
+        allow read: if request.auth.uid == userId;
+        allow write: if request.auth.uid == userId;
         allow delete: if false;
       }
     }

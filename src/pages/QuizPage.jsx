@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Swords, Flame } from 'lucide-react';
+import { ArrowRight, Swords, Flame, Target } from 'lucide-react';
 import { Skeleton, Snackbar, Alert } from '@mui/material';
 import { useShallow } from 'zustand/react/shallow';
 import useQuizStore from '../store/useQuizStore';
+import { CATEGORY_LEVELS } from '../config/levels';
+import { DIFFICULTY_CONFIG } from '../config/difficulty';
 import Navbar from '../components/Navbar';
 import ProgressStepper from '../components/ProgressStepper';
 import QuestionCard from '../components/QuestionCard';
@@ -25,6 +27,8 @@ export default function QuizPage() {
     timer,
     selectAnswer,
     goToNext,
+    categoryProgress,
+    currentDifficulty,
   } = useQuizStore(
     useShallow((s) => ({
       questions: s.questions,
@@ -36,6 +40,8 @@ export default function QuizPage() {
       timer: s.timer,
       selectAnswer: s.selectAnswer,
       goToNext: s.goToNext,
+      categoryProgress: s.categoryProgress,
+      currentDifficulty: s.currentDifficulty,
     }))
   );
 
@@ -106,12 +112,16 @@ export default function QuizPage() {
 
   if (!category) return <Navigate to="/" replace />;
 
+  const currentLevel = categoryProgress?.currentLevel || 1;
+  const levelInfo = CATEGORY_LEVELS[currentLevel];
+  const difficultyInfo = DIFFICULTY_CONFIG[currentDifficulty];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
       <main className="flex-1 flex flex-col items-center p-4">
-        <div className="w-full max-w-2xl space-y-6 py-4 sm:py-8">
+        <div className="w-full max-w-2xl space-y-4 sm:space-y-6 py-4 sm:py-8">
           {(challenge || isDaily) && (
             <div className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm font-semibold">
               {challenge ? (
@@ -122,6 +132,23 @@ export default function QuizPage() {
               ) : (
                 <><Flame className="w-4 h-4" /> Daily challenge · 2x XP</>
               )}
+            </div>
+          )}
+
+          {!isLoading && questions.length > 0 && (
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <Target className="w-3.5 h-3.5" />
+                <span className="font-medium">Level {currentLevel} · {levelInfo?.name || 'Beginner'}</span>
+              </div>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                currentDifficulty === 'easy' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                currentDifficulty === 'medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                currentDifficulty === 'hard' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' :
+                'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+              }`}>
+                {difficultyInfo?.label || 'Easy'} · {difficultyInfo?.points || 10}pts
+              </span>
             </div>
           )}
 

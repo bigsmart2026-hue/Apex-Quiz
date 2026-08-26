@@ -10,8 +10,10 @@ import DailyChallengeCard from './DailyChallengeCard';
 import StatCard from './ui/StatCard';
 import Card from './ui/Card';
 import { categories } from '../utils/categories';
-import { QUESTIONS_PER_QUIZ } from '../utils/constants';
+import { getCategoryConfig } from '../config/categories';
+import { CATEGORY_LEVELS, MAX_CATEGORY_LEVEL } from '../config/levels';
 import { hasCompletedDailyChallenge } from '../services/dailyChallenge.service';
+import { getCategoryProgress } from '../services/quiz/progressService';
 import { getAchievement } from '../utils/achievements';
 
 export default function CategorySelector() {
@@ -21,6 +23,7 @@ export default function CategorySelector() {
   const fetchQuestions = useQuizStore((s) => s.fetchQuestions);
   const [hoveredId, setHoveredId] = useState(null);
   const [dailyDone, setDailyDone] = useState(false);
+  const [categoryProgressMap, setCategoryProgressMap] = useState({});
 
   const profile = useProfileStore((s) => s.profile);
   const levelInfo = useProfileStore((s) => s.levelInfo);
@@ -29,9 +32,28 @@ export default function CategorySelector() {
     if (user) hasCompletedDailyChallenge(user.uid).then(setDailyDone).catch(() => {});
   }, [user]);
 
+  useEffect(() => {
+    if (!user?.uid) return;
+    let cancelled = false;
+    const load = async () => {
+      const map = {};
+      for (const cat of categories) {
+        try {
+          const p = await getCategoryProgress(user.uid, cat.id);
+          map[cat.id] = p;
+        } catch {
+          map[cat.id] = null;
+        }
+      }
+      if (!cancelled) setCategoryProgressMap(map);
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [user]);
+
   const handleSelect = (category) => {
     setCategory(category);
-    fetchQuestions(category.apiId, category.name);
+    fetchQuestions(category.id, category.name);
     navigate('/quiz');
   };
 
@@ -76,10 +98,10 @@ export default function CategorySelector() {
             className="grid grid-cols-2 lg:grid-cols-4 gap-3"
           >
             <StatCard
-              label="Questions"
-              value={`${categories.length * QUESTIONS_PER_QUIZ}+`}
+              label="Categories"
+              value={categories.length}
               icon={<Puzzle className="w-5 h-5" />}
-              sub={`${categories.length} categories`}
+              sub={`${MAX_CATEGORY_LEVEL} levels each`}
             />
             <StatCard
               label="Current streak"
@@ -145,10 +167,12 @@ export default function CategorySelector() {
               {categories.map((category, index) => {
                 const Icon = category.icon;
                 const isHovered = hoveredId === category.id;
-                const stat = profile?.categoryStats?.[category.id];
-                const masteryPct = stat?.answered
-                  ? Math.min(100, Math.round((stat.correct / stat.answered) * 100))
-                  : 0;
+                const catProgress = categoryProgressMap[category.id];
+                const masteryPct = catProgress?.masteryPercentage || 0;
+                const currentLevel = catProgress?.currentLevel || 1;
+                const config = getCategoryConfig(category.id);
+                const levelName = CATEGORY_LEVELS[currentLevel]?.name || 'Beginner';
+                const hasPlayed = catProgress && catProgress.totalQuestions > 0;
 
                 return (
                   <motion.button
@@ -176,21 +200,21 @@ export default function CategorySelector() {
                       >
                         <Icon className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="font-semibold text-slate-900 dark:text-white leading-tight truncate">
                           {category.name}
                         </p>
                         <p className="text-xs text-slate-600 dark:text-slate-400">
-                          {QUESTIONS_PER_QUIZ} questions · {category.apiId ? 'Open Trivia' : 'Apex Bank'}
+                          {levelName} · {config?.provider === 'firestore' ? 'Apex Bank' : config?.provider === 'quizapi' ? 'QuizAPI' : 'Open Trivia'}
                         </p>
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-600 dark:text-slate-400 font-medium">Mastery</span>
+                        <span className="text-slate-600 dark:text-slate-400 font-medium">Level {currentLevel}/{MAX_CATEGORY_LEVEL}</span>
                         <span className={`font-semibold tabular-nums ${masteryPct >= 80 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'}`}>
-                          {stat?.answered ? `${masteryPct}%` : 'New'}
+                          {hasPlayed ? `${masteryPct}%` : 'New'}
                         </span>
                       </div>
                       <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
@@ -200,6 +224,19 @@ export default function CategorySelector() {
                           }`}
                           style={{ width: `${masteryPct}%` }}
                         />
+                      </div>
+                      <div className="flex gap-1 mt-1">
+                        {Array.from({ length: MAX_CATEGORY_LEVEL }, (_, i) => {
+                          const lvl = i + 1;
+                          const unlocked = catProgress?.levelsUnlocked?.[lvl] || lvl === 1;
+                          return (
+                            <div
+                              key={lvl}
+                              className={`w-1.5 h-1.5 rounded-full ${unlocked ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                              title={unlocked ? `Level ${lvl} unlocked` : `Level ${lvl} locked`}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
 
