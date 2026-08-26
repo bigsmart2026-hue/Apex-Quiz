@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed": "node seed.js",
+    "seed": "node scripts/seed-questions.js",
     "preview": "vite preview",
     "deploy:rules": "firebase deploy --only firestore:rules"
   },

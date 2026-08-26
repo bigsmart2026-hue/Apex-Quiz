@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ---------- Question banks ----------
+    // ---------- Question banks (read-only) ----------
     match /quizzes/{document} {
       allow read: if request.auth != null;
       allow write: if false;
@@ -15,21 +15,54 @@ service cloud.firestore {
         && request.resource.data.categoryId is string
         && request.resource.data.text is string
         && request.resource.data.options is list
+        && request.resource.data.options.size() >= 2
+        && request.resource.data.options.size() <= 6
+        && request.resource.data.correctAnswer is number
+        && request.resource.data.correctAnswer >= 0
+        && request.resource.data.correctAnswer < request.resource.data.options.size()
+        && request.resource.data.difficulty in ['easy', 'medium', 'hard', 'master']
         && request.resource.data.active == true;
       allow update, delete: if false;
     }
 
     // ---------- User profiles ----------
-    // Readable by any authenticated user (powers the leaderboard).
-    // Only the owner may create/update. XP, streaks and stats are
-    // delta-bounded so the client cannot trivially inflate them.
     match /users/{userId} {
       allow read: if request.auth != null;
       allow create: if request.auth.uid == userId
         && request.resource.data.xp == 0
         && request.resource.data.currentStreak == 0
-        && request.resource.data.quizzesCompleted == 0;
-      allow update: if request.auth.uid == userId;
+        && request.resource.data.quizzesCompleted == 0
+        && request.resource.data.totalPoints == 0
+        && request.resource.data.unlockedLevel == 1;
+      allow update: if request.auth.uid == userId
+        // XP can only increase (delta-bounded)
+        && request.resource.data.xp >= resource.data.xp
+        && request.resource.data.xp <= resource.data.xp + 500
+        // Total points can only increase
+        && request.resource.data.totalPoints >= resource.data.totalPoints
+        && request.resource.data.totalPoints <= resource.data.totalPoints + 500
+        // Quizzes completed can only increase by 0 or 1
+        && request.resource.data.quizzesCompleted >= resource.data.quizzesCompleted
+        && request.resource.data.quizzesCompleted <= resource.data.quizzesCompleted + 1
+        // Streak can increase by at most 1, or reset to 0
+        && (
+          (request.resource.data.currentStreak == resource.data.currentStreak + 1
+            && request.resource.data.currentStreak <= 365)
+          || request.resource.data.currentStreak == 0
+          || request.resource.data.currentStreak == resource.data.currentStreak
+        )
+        // Max streak can only increase or stay the same
+        && request.resource.data.maxStreak >= resource.data.maxStreak
+        && request.resource.data.maxStreak <= 365
+        // Unlocked level can only increase by at most 1
+        && request.resource.data.unlockedLevel >= resource.data.unlockedLevel
+        && request.resource.data.unlockedLevel <= resource.data.unlockedLevel + 1
+        && request.resource.data.unlockedLevel <= 4
+        // Total correct/incorrect can only increase
+        && request.resource.data.totalCorrect >= resource.data.totalCorrect
+        && request.resource.data.totalIncorrect >= resource.data.totalIncorrect
+        // lastSeen is always overwritten
+        && request.resource.data.lastSeen is timestamp;
       allow delete: if false;
 
       // ---------- Notifications ----------
@@ -47,25 +80,74 @@ service cloud.firestore {
       // ---------- Category progress ----------
       match /categoryProgress/{categoryId} {
         allow read: if request.auth.uid == userId;
-        allow write: if request.auth.uid == userId;
+        allow create: if request.auth.uid == userId
+          && request.resource.data.currentLevel == 1
+          && request.resource.data.highestLevel == 1
+          && request.resource.data.totalQuestions >= 0
+          && request.resource.data.totalQuestions <= 10000
+          && request.resource.data.correctAnswers >= 0
+          && request.resource.data.correctAnswers <= request.resource.data.totalQuestions
+          && request.resource.data.incorrectAnswers >= 0
+          && request.resource.data.incorrectAnswers <= request.resource.data.totalQuestions
+          && request.resource.data.totalPoints >= 0
+          && request.resource.data.totalPoints <= 500000
+          && request.resource.data.quizzesCompleted == 0
+          && request.resource.data.masteryPercentage >= 0
+          && request.resource.data.masteryPercentage <= 100
+          && request.resource.data.levelsUnlocked is map
+          && request.resource.data.levelsUnlocked["1"] == true;
+        allow update: if request.auth.uid == userId
+          // Level can only increase by at most 1
+          && request.resource.data.currentLevel >= resource.data.currentLevel
+          && request.resource.data.currentLevel <= resource.data.currentLevel + 1
+          && request.resource.data.currentLevel <= 4
+          // highestLevel can only increase
+          && request.resource.data.highestLevel >= resource.data.highestLevel
+          && request.resource.data.highestLevel <= 4
+          // Total questions can only increase (delta-bounded: quiz has 5-20 questions)
+          && request.resource.data.totalQuestions >= resource.data.totalQuestions
+          && request.resource.data.totalQuestions <= resource.data.totalQuestions + 20
+          // Correct answers can only increase
+          && request.resource.data.correctAnswers >= resource.data.correctAnswers
+          && request.resource.data.correctAnswers <= resource.data.correctAnswers + 20
+          && request.resource.data.correctAnswers <= request.resource.data.totalQuestions
+          // Incorrect answers can only increase
+          && request.resource.data.incorrectAnswers >= resource.data.incorrectAnswers
+          && request.resource.data.incorrectAnswers <= resource.data.incorrectAnswers + 20
+          && request.resource.data.incorrectAnswers <= request.resource.data.totalQuestions
+          // Total points can only increase (max 50pts * 20 questions = 1000 per quiz)
+          && request.resource.data.totalPoints >= resource.data.totalPoints
+          && request.resource.data.totalPoints <= resource.data.totalPoints + 1000
+          // Mastery percentage is bounded
+          && request.resource.data.masteryPercentage >= 0
+          && request.resource.data.masteryPercentage <= 100
+          // Quizzes completed can only increase by 0 or 1
+          && request.resource.data.quizzesCompleted >= resource.data.quizzesCompleted
+          && request.resource.data.quizzesCompleted <= resource.data.quizzesCompleted + 1
+          // Levels unlocked map can only grow (new keys added)
+          && request.resource.data.levelsUnlocked is map
+          // lastPlayedAt is always overwritten
+          && request.resource.data.lastPlayedAt is timestamp;
         allow delete: if false;
       }
     }
 
     // ---------- Quiz attempts ----------
-    // Deterministic doc id (`{uid}_{categoryId}_{date}`) means a second
-    // submission for the same quiz+day is an update, which is denied —
-    // this prevents replay/duplicate XP farming.
     match /quizAttempts/{attemptId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.score >= 0
-        && request.resource.data.score <= request.resource.data.total
-        && request.resource.data.total > 0
+        && request.resource.data.score <= 20
+        && request.resource.data.total >= 5
         && request.resource.data.total <= 20
+        && request.resource.data.score <= request.resource.data.total
         && request.resource.data.accuracyPct >= 0
-        && request.resource.data.accuracyPct <= 100;
+        && request.resource.data.accuracyPct <= 100
+        && request.resource.data.categoryId is string
+        && request.resource.data.difficulty in ['easy', 'medium', 'hard', 'master']
+        && request.resource.data.points >= 0
+        && request.resource.data.points <= 1000;
       allow update, delete: if false;
     }
 
@@ -74,16 +156,18 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.score >= 0
+        && request.resource.data.score <= 20
+        && request.resource.data.total >= 5
+        && request.resource.data.total <= 20
         && request.resource.data.score <= request.resource.data.total
-        && request.resource.data.total > 0
-        && request.resource.data.total <= 20;
+        && request.resource.data.categoryId is string
+        && request.resource.data.points >= 0
+        && request.resource.data.points <= 1000;
       allow read: if request.auth != null;
       allow update, delete: if false;
     }
 
     // ---------- Friend challenges ----------
-    // Scores are immutable once set; participants may only write their own
-    // slot. Winner is derived from stored scores, never accepted from client.
     match /challenges/{code} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
