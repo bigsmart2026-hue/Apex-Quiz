@@ -1,6 +1,7 @@
 /**
  * Firestore question bank service.
- * Stores, retrieves, and manages questions in the Firestore 'questions' collection.
+ * No-op when Firebase is not configured — the question engine
+ * falls back to external APIs and the local question bank.
  */
 import {
   collection, query, where, limit as firestoreLimit, getDocs,
@@ -20,6 +21,10 @@ function computeQuestionHash(text, options) {
 }
 
 export async function fetchFirestoreQuestions({ categoryId, difficulty, amount }) {
+  void categoryId;
+  void difficulty;
+  void amount;
+  if (!db) return [];
   const constraints = [
     where('categoryId', '==', categoryId),
     where('active', '==', true),
@@ -33,7 +38,7 @@ export async function fetchFirestoreQuestions({ categoryId, difficulty, amount }
 }
 
 export async function saveQuestionsToFirestore(questions) {
-  if (!questions.length) return;
+  if (!questions.length || !db) return 0;
   const batch = writeBatch(db);
   const col = collection(db, QUESTIONS_COLLECTION);
   let saved = 0;
@@ -63,6 +68,9 @@ export async function saveQuestionsToFirestore(questions) {
 }
 
 export async function isDuplicateQuestion(categoryId, hash) {
+  void categoryId;
+  void hash;
+  if (!db) return false;
   const q = query(
     collection(db, QUESTIONS_COLLECTION),
     where('categoryId', '==', categoryId),

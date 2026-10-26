@@ -6,7 +6,7 @@ import AuthLayout from '../components/AuthLayout';
 import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
 
 export default function RegisterPage() {
-  const { user, registerWithEmail, loginWithGoogle } = useFirebaseAuth();
+  const { user, registerWithEmail, loginWithGoogle, authError, clearAuthError } = useFirebaseAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [name, setName] = useState('');
@@ -29,6 +29,7 @@ export default function RegisterPage() {
     }
     setLoading(true);
     setError(null);
+    clearAuthError();
     try {
       await registerWithEmail(name, email, password);
       navigate(from, { replace: true });
@@ -50,6 +51,7 @@ export default function RegisterPage() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
+    clearAuthError();
     try {
       await loginWithGoogle();
       navigate(from, { replace: true });
@@ -68,13 +70,13 @@ export default function RegisterPage() {
       title="Create Account"
       subtitle="Create an account to save your progress and scores"
     >
-      {error && (
+      {(error || authError) && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-5 p-3 rounded-xl bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm text-center"
         >
-          {error}
+          {error || authError}
         </motion.div>
       )}
 
@@ -152,10 +154,10 @@ export default function RegisterPage() {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           ) : (
-            <>
+            <span className="flex items-center gap-2">
               <UserPlus className="w-4 h-4" />
               Create Account
-            </>
+            </span>
           )}
         </motion.button>
       </form>

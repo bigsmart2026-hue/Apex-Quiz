@@ -10,12 +10,156 @@ import {
 } from '../utils/progression';
 import { evaluateNewAchievements } from '../utils/achievements';
 
+// ---- Local-guest persistence (used when Firebase is not configured) ----
+const LOCAL_PROFILE_KEY = 'apex-quiz-local-profile';
+const LOCAL_ATTEMPTS_KEY = 'apex-quiz-local-attempts';
+
+function readLocalProfile() {
+  try {
+    const raw = localStorage.getItem(LOCAL_PROFILE_KEY);
+    if (raw) return { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
+  } catch {
+    // corrupted storage — start fresh
+  }
+  return { ...DEFAULT_PROFILE };
+}
+
+function writeLocalProfile(profile) {
+  try {
+    localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(profile));
+  } catch {
+    // storage unavailable — keep in-memory only
+  }
+}
+
+function readLocalAttempts() {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_ATTEMPTS_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function writeLocalAttempts(attempts) {
+  try {
+    localStorage.setItem(LOCAL_ATTEMPTS_KEY, JSON.stringify(attempts));
+  } catch {
+    // ignore
+  }
+}
+
+function applyQuizToProfile(profile, user, category, params) {
+  const { score, total, avgAnswerSec, isDaily = false, isChallenge = false, wonChallenge = false } = params;
+  const todayKey = toDateKey();
+
+  const streak = profile.lastPlayedDate === todayKey
+    ? profile.currentStreak
+    : isYesterday(profile.lastPlayedDate)
+      ? profile.currentStreak + 1
+      : 1;
+
+  const accuracyPct = getAccuracy(score, total);
+  const prevUnlockedLevel = profile.unlockedLevel || 1;
+  const { canUnlock, nextLevel } = checkLevelUnlock(prevUnlockedLevel, accuracyPct);
+  const levelCompleted = canUnlock && nextLevel !== null;
+  const newUnlockedLevel = levelCompleted ? nextLevel : prevUnlockedLevel;
+
+  const xpGained = computeQuizXp({ score, total, isDaily, streak, avgAnswerSec, levelCompleted });
+  const prevLevel = getLevel(profile.xp);
+  const newXp = profile.xp + xpGained;
+  const newLevel = getLevel(newXp);
+
+  const weekStart = weekChanged(profile.weekStart) ? getWeekStartKey() : profile.weekStart;
+  const weeklyXp = weekStart === profile.weekStart ? profile.weeklyXp + xpGained : xpGained;
+
+  const stat = profile.categoryStats?.[category.id] || { answered: 0, correct: 0, bestPct: 0 };
+  const categoryStats = {
+    ...(profile.categoryStats || {}),
+    [category.id]: {
+      answered: stat.answered + total,
+      correct: stat.correct + score,
+      bestPct: Math.max(stat.bestPct, accuracyPct),
+    },
+  };
+
+  const questionsAnswered = (profile.questionsAnswered || 0) + total;
+  const masteryPct = Math.min(100, Math.round((stat.correct / Math.max(stat.answered, 1)) * 100));
+
+  const newAchievements = evaluateNewAchievements(
+    {
+      score, total, accuracyPct, avgAnswerSec,
+      isDaily, isChallenge, wonChallenge,
+      newStreak: streak, totalQuestionsAnswered: questionsAnswered,
+      level: newLevel, unlockedLevel: newUnlockedLevel, categoryMasteryPct: masteryPct,
+    },
+    profile.achievements || {}
+  );
+
+  const achievements = { ...(profile.achievements || {}) };
+  newAchievements.forEach((id) => {
+    achievements[id] = Date.now();
+  });
+
+  const updated = {
+    ...profile,
+    displayName: user.displayName ?? profile.displayName,
+    xp: newXp,
+    unlockedLevel: newUnlockedLevel,
+    currentStreak: streak,
+    longestStreak: Math.max(profile.longestStreak || 0, streak),
+    lastPlayedDate: todayKey,
+    quizzesCompleted: (profile.quizzesCompleted || 0) + 1,
+    questionsAnswered,
+    correctAnswers: (profile.correctAnswers || 0) + score,
+    bestScorePct: Math.max(profile.bestScorePct || 0, accuracyPct),
+    weeklyXp,
+    weekStart,
+    achievements,
+    categoryStats,
+    lastSeen: Date.now(),
+  };
+
+  return {
+    updated,
+    summary: {
+      xpGained,
+      level: newLevel,
+      levelName: getLevelName(newXp),
+      leveledUp: newLevel > prevLevel,
+      unlockedLevel: newUnlockedLevel,
+      levelCompleted,
+      streak,
+      newAchievements,
+      accuracyPct,
+      attemptId: `${user.uid}_${isDaily ? 'daily' : category.id}_${todayKey}`,
+    },
+  };
+}
+
 export const updateLastSeen = (uid) => {
+  if (!db) {
+    const profile = readLocalProfile();
+    writeLocalProfile({ ...profile, lastSeen: Date.now() });
+    return Promise.resolve();
+  }
   const ref = doc(db, USERS_COLLECTION, uid);
   return setDoc(ref, { lastSeen: serverTimestamp() }, { merge: true }).catch(() => {});
 };
 
 export const getOrCreateProfile = async (user) => {
+  if (!db) {
+    const stored = readLocalProfile();
+    const merged = {
+      ...stored,
+      displayName: stored.displayName ?? user.displayName ?? 'Guest',
+      photoURL: stored.photoURL ?? user.photoURL ?? null,
+      email: stored.email ?? user.email ?? null,
+      lastSeen: Date.now(),
+    };
+    writeLocalProfile(merged);
+    return merged;
+  }
+
   const ref = doc(db, USERS_COLLECTION, user.uid);
   const snap = await getDoc(ref);
 
@@ -69,6 +213,22 @@ export const getOrCreateProfile = async (user) => {
  *                      streak: number, newAchievements: string[], accuracyPct: number }>}
  */
 export async function recordQuizCompletion(user, category, params) {
+  if (!db) {
+    const { isDaily = false } = params;
+    const todayKey = toDateKey();
+    const attemptId = `${user.uid}_${isDaily ? 'daily' : category.id}_${todayKey}`;
+    const attempts = readLocalAttempts();
+    if (attempts[attemptId]) {
+      throw new Error('QUIZ_ALREADY_PLAYED');
+    }
+    const profile = readLocalProfile();
+    const { updated, summary } = applyQuizToProfile(profile, user, category, params);
+    attempts[attemptId] = { createdAt: Date.now(), score: params.score, total: params.total };
+    writeLocalAttempts(attempts);
+    writeLocalProfile(updated);
+    return summary;
+  }
+
   const { score, total, timeTakenMs, avgAnswerSec, isDaily = false, isChallenge = false, wonChallenge = false } = params;
   const todayKey = toDateKey();
   const attemptId = `${user.uid}_${isDaily ? 'daily' : category.id}_${todayKey}`;
@@ -206,6 +366,11 @@ export async function recordQuizCompletion(user, category, params) {
 }
 
 export const getProfile = async (uid) => {
+  if (!db) {
+    const stored = readLocalProfile();
+    void uid;
+    return stored;
+  }
   const snap = await getDoc(doc(db, USERS_COLLECTION, uid));
   return snap.exists() ? { ...DEFAULT_PROFILE, ...snap.data() } : null;
 };
