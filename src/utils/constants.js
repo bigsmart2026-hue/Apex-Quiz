@@ -9,6 +9,13 @@ export const CATEGORY_PROGRESS_COLLECTION = 'categoryProgress';
 export const TIMER_DURATION = 15;
 export const QUESTIONS_PER_QUIZ = 10;
 
+/** AI quiz-generation tiers (mirror backend settings). */
+export const FREE_TIER = Object.freeze({ id: 'free', maxQuestions: 10, minQuestions: 5 });
+export const PREMIUM_TIER = Object.freeze({ id: 'premium', maxQuestions: 50, minQuestions: 10 });
+
+/** Max PDF upload size (mirrors backend PDF_MAX_MB). */
+export const PDF_MAX_MB = 20;
+
 /**
  * Returns quiz config based on the player's unlocked level.
  * Levels 1-2: 10 questions, 15s timer (Easy / Medium)

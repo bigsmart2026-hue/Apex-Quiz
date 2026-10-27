@@ -5,7 +5,7 @@ import AuthLayout from '../components/AuthLayout';
 import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
 
 export default function LoginPage() {
-  const { user, loginWithEmail, loginWithGoogle } = useFirebaseAuth();
+  const { user, loginWithEmail, loginWithGoogle, authError, clearAuthError } = useFirebaseAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
@@ -22,6 +22,7 @@ export default function LoginPage() {
     if (!email || !password) return;
     setLoading(true);
     setError(null);
+    clearAuthError();
     try {
       await loginWithEmail(email, password);
       navigate(from, { replace: true });
@@ -41,6 +42,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
+    clearAuthError();
     try {
       await loginWithGoogle();
       navigate(from, { replace: true });
@@ -56,13 +58,13 @@ export default function LoginPage() {
       title="Welcome to Apex Quiz"
       subtitle="Challenge yourself. Track your progress. Compete with friends."
     >
-      {error && (
+      {(error || authError) && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-5 p-3 rounded-xl bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm text-center"
         >
-          {error}
+          {error || authError}
         </motion.div>
       )}
 

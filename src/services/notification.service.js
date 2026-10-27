@@ -11,6 +11,7 @@ const notifsCol = (uid) => collection(db, USERS_COLLECTION, uid, 'notifications'
  * Sends a challenge notification to a user.
  */
 export function sendChallengeNotification(targetUid, { fromUid, fromName, challengeCode, categoryName }) {
+  if (!db) return Promise.resolve(null);
   return addDoc(notifsCol(targetUid), {
     type: 'challenge',
     fromUid,
@@ -26,6 +27,7 @@ export function sendChallengeNotification(targetUid, { fromUid, fromName, challe
  * Sends a challenge-created confirmation to the creator.
  */
 export function sendChallengeCreatedNotification(creatorUid, { challengeCode, opponentName, categoryName }) {
+  if (!db) return Promise.resolve(null);
   return addDoc(notifsCol(creatorUid), {
     type: 'challenge-created',
     challengeCode,
@@ -41,6 +43,11 @@ export function sendChallengeCreatedNotification(creatorUid, { challengeCode, op
  * Returns an unsubscribe function.
  */
 export function listenNotifications(uid, callback) {
+  void uid;
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
   const q = query(notifsCol(uid), orderBy('createdAt', 'desc'));
   return onSnapshot(q, (snap) => {
     const notifications = snap.docs.map((d) => ({
@@ -56,6 +63,7 @@ export function listenNotifications(uid, callback) {
  * Marks a single notification as read.
  */
 export function markNotificationRead(uid, notifId) {
+  if (!db) return Promise.resolve();
   return updateDoc(doc(db, USERS_COLLECTION, uid, 'notifications', notifId), {
     read: true,
   });
@@ -65,6 +73,7 @@ export function markNotificationRead(uid, notifId) {
  * Marks all unread notifications as read.
  */
 export async function markAllRead(uid) {
+  if (!db) return;
   const q = query(notifsCol(uid), where('read', '==', false));
   const snap = await getDocs(q);
   const batch = writeBatch(db);

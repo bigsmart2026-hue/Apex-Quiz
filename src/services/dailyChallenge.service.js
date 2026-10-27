@@ -5,12 +5,18 @@ import { toDateKey } from '../utils/dates';
 
 /**
  * Daily challenge participation tracking.
- * The challenge itself is deterministic (seeded by date) and lives in the
- * client; participation is recorded server-side with a deterministic doc id
- * inside the same transaction that awards XP (see profile.service.js), so a
- * user can complete at most one daily challenge per day.
+ * Firestore when configured, otherwise the local attempts map
+ * maintained by profile.service.js.
  */
 export const getDailyChallengeAttempt = async (uid) => {
+  if (!db) {
+    try {
+      const attempts = JSON.parse(localStorage.getItem('apex-quiz-local-attempts') || '{}');
+      return attempts[`${uid}_daily_${toDateKey()}`] ?? null;
+    } catch {
+      return null;
+    }
+  }
   const ref = doc(db, DAILY_ATTEMPTS_COLLECTION, `${uid}_${toDateKey()}`);
   const snap = await getDoc(ref);
   return snap.exists() ? snap.data() : null;

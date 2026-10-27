@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { Flame, Puzzle, Target, Zap, TrendingUp, Lock } from 'lucide-react';
+import { Flame, Puzzle, Target, Zap, TrendingUp, Lock, Crown } from 'lucide-react';
 import useQuizStore from '../store/useQuizStore';
 import { useProfileStore } from '../store/useProfileStore';
+import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import Navbar from '../components/Navbar';
 import Avatar from '../components/ui/Avatar';
 import Card from '../components/ui/Card';
@@ -16,6 +17,8 @@ export default function ProfilePage() {
   const user = useQuizStore((s) => s.user);
   const profile = useProfileStore((s) => s.profile);
   const levelInfo = useProfileStore((s) => s.levelInfo);
+  const sub = useSubscriptionStore((s) => s);
+  const isPremium = sub.tier === 'premium';
 
   if (!profile) {
     return (
@@ -67,6 +70,54 @@ export default function ProfilePage() {
                 </p>
               </div>
             </div>
+          </motion.section>
+
+          {/* Subscription */}
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.03 }}
+          >
+            <Card className="p-5 sm:p-6 flex flex-col sm:flex-row items-center gap-4">
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isPremium ? 'bg-amber-100 dark:bg-amber-900/40' : 'bg-slate-100 dark:bg-slate-700'}`}>
+                <Crown className={`w-5 h-5 ${isPremium ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`} />
+              </div>
+              <div className="flex-1 w-full text-center sm:text-left">
+                <div className="flex items-center justify-center sm:justify-start gap-2">
+                  <h2 className="font-heading text-slate-900 dark:text-white">
+                    {isPremium ? 'Premium' : 'Free plan'}
+                  </h2>
+                  <Badge variant={isPremium ? 'amber' : 'slate'}>
+                    up to {sub.questionLimit} questions
+                  </Badge>
+                </div>
+                <div className="mt-2 max-w-xs mx-auto sm:mx-0">
+                  <ProgressBar
+                    value={sub.questionLimit > 0 ? Math.min(1, sub.usedThisMonth / sub.questionLimit) : 0}
+                    label="Monthly generation usage"
+                  />
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 tabular-nums">
+                  {sub.usedThisMonth} of {sub.questionLimit} generated
+                  {!sub.backendAvailable && ' · offline'}
+                </p>
+              </div>
+              {isPremium ? (
+                <button
+                  onClick={() => sub.cancel()}
+                  className="px-5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-slate-300 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-colors cursor-pointer flex-shrink-0"
+                >
+                  Cancel premium
+                </button>
+              ) : (
+                <button
+                  onClick={() => sub.openUpgrade()}
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-sm font-semibold transition-colors cursor-pointer flex-shrink-0"
+                >
+                  Go Premium
+                </button>
+              )}
+            </Card>
           </motion.section>
 
           {/* Stats */}
