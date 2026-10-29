@@ -23,6 +23,7 @@ const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ChallengesPage = lazy(() => import('./pages/ChallengesPage'));
 const CreateQuizPage = lazy(() => import('./pages/CreateQuizPage'));
+const PaymentCallbackPage = lazy(() => import('./pages/PaymentCallbackPage'));
 
 function PageLoader() {
   return (
@@ -40,11 +41,13 @@ export default function App() {
   const loadProfile = useProfileStore((s) => s.loadProfile);
   const clearProfile = useProfileStore((s) => s.clearProfile);
   const refreshSubscription = useSubscriptionStore((s) => s.refresh);
+  const loadSubscriptionPlan = useSubscriptionStore((s) => s.loadPlan);
 
   // No auto-guest login — real Firebase auth handles it via useFirebaseAuth hook
   useEffect(() => {
     refreshSubscription();
-  }, [refreshSubscription]);
+    loadSubscriptionPlan();
+  }, [refreshSubscription, loadSubscriptionPlan]);
 
   useEffect(() => {
     if (user) {
@@ -153,6 +156,15 @@ export default function App() {
                       <CreateQuizPage />
                     </PageTransition>
                   </ProtectedRoute>
+                }
+              />
+              {/* Public so the redirect fallback can verify before auth rehydrates. */}
+              <Route
+                path="/payment/callback"
+                element={
+                  <PageTransition>
+                    <PaymentCallbackPage />
+                  </PageTransition>
                 }
               />
 

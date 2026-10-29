@@ -69,6 +69,15 @@ docker-compose up --build
 | POST | `/api/auth/refresh` | Refresh access token |
 | GET | `/api/auth/me` | Get current user info |
 | GET | `/api/auth/subscription` | Get subscription status |
+| POST | `/api/auth/cancel` | Cancel the Paystack subscription |
+
+### Paystack Subscriptions
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/payments/paystack/plan` | Public plan price/interval (no secret key) |
+| POST | `/api/payments/paystack/initialize` | Start a card-only recurring checkout |
+| POST | `/api/payments/paystack/verify` | Verify a transaction server-side |
+| POST | `/api/payments/paystack/webhook` | Paystack webhook receiver (signature verified) |
 
 ### Quiz Generation
 | Method | Endpoint | Description |
@@ -135,6 +144,79 @@ curl -X POST "http://localhost:8000/api/study-aids/generate" \
   }'
 ```
 
+## Paystack Subscriptions
+
+Premium uses a **predefined Paystack Plan**. Create the plan once, then set its
+code as `PAYSTACK_PREMIUM_PLAN_CODE`; checkout requests only reference
+`plan: "PLN_..."` so clients can never change the price.
+
+### 1. Create the plan
+
+```bash
+curl https://api.paystack.co/plan \
+  -H "Authorization: Bearer $PAYSTACK_SECRET_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Apex Quiz Premium",
+    "interval": "monthly",
+    "amount": 500000,
+    "currency": "NGN"
+  }'
+```
+
+`amount` is in the lowest currency subunit: 5,000 NGN = **500,000 kobo**. The
+backend derives the checkout amount the same way (`PAYSTACK_PREMIUM_PRICE × 100`),
+so you do not pass amounts from the browser. Keep `PAYSTACK_PREMIUM_PRICE` and
+`PAYSTACK_PREMIUM_INTERVAL` in sync with the Paystack plan; a mismatch fails
+closed during verification rather than granting access for the wrong amount.
+
+### 2. Configure the backend
+
+```env
+PAYSTACK_SECRET_KEY=sk_test_...
+PAYSTACK_PUBLIC_KEY=pk_test_...
+PAYSTACK_PREMIUM_PLAN_CODE=PLN_...
+PAYSTACK_PREMIUM_PRICE=5000        # base currency, converted to kobo/cents
+PAYSTACK_CURRENCY=NGN
+PAYSTACK_PREMIUM_INTERVAL=monthly
+PAYSTACK_CALLBACK_URL=http://localhost:5175/payment/callback
+```
+
+### 3. Add the webhook
+
+In the Paystack dashboard, set the webhook URL to:
+
+```text
+https://<your-api-host>/api/payments/paystack/webhook
+```
+
+Paystack signs the raw request body with your secret key. The endpoint verifies
+`x-paystack-signature` as HMAC-SHA512 before parsing anything, and records each
+event in a unique idempotency ledger so retries cannot double-provision access.
+
+| Event | Action |
+|-------|--------|
+| `charge.success` | Activates premium after a successful card charge |
+| `subscription.create` | Stores the subscription code, renewal date, and server-only email token |
+| `invoice.payment_failed` | Flags the renewal as past due and revokes premium access |
+| `subscription.disable` | Revokes access when Paystack disables a subscription |
+
+### Security notes
+
+- **Card only:** initialization sends `channels: ["card"]` because Paystack
+  automated recurring charges are card-driven. Non-card charges are ignored.
+- **Plan first:** the request body only accepts `{ "plan": "premium" }`; plan
+  codes and amounts are resolved server-side.
+- **Never trust the frontend callback:** the popup callback calls
+  `/verify`, which also asks Paystack directly. The webhook remains the source
+  of truth for renewals and failures.
+- **No offline upgrade fallback:** if the backend or Paystack is unavailable,
+  the checkout fails safely rather than granting local premium.
+
+The React app opens the Paystack Inline popup when available and falls back to
+redirecting to `authorization_url`; `/payment/callback` verifies the returned
+`reference` before showing success.
+
 ## PDF Processing Pipeline
 
 ```
@@ -182,6 +264,13 @@ Key environment variables:
 |----------|---------|-------------|
 | `FREE_QUESTION_MAX` | 10 | Max questions for free tier |
 | `PREMIUM_QUESTION_MAX` | 50 | Max questions for premium tier |
+| `PAYSTACK_SECRET_KEY` | - | **Required for payments** Paystack secret key |
+| `PAYSTACK_PUBLIC_KEY` | - | Paystack public key used by the checkout popup |
+| `PAYSTACK_PREMIUM_PLAN_CODE` | - | Paystack plan code (`PLN_...`) for recurring billing |
+| `PAYSTACK_PREMIUM_PRICE` | 5000 | Base plan price; converted to kobo/cents |
+| `PAYSTACK_CURRENCY` | NGN | Plan currency (NGN, USD, ZAR, GHS, KES) |
+| `PAYSTACK_PREMIUM_INTERVAL` | monthly | Must match the interval on the Paystack plan |
+| `PAYSTACK_CALLBACK_URL` | http://localhost:5175/payment/callback | Redirect fallback after checkout |
 | `PDF_MAX_MB` | 20 | Max PDF upload size |
 | `STRUCTURE_QUALITY_THRESHOLD` | 0.6 | Minimum extraction quality |
 | `GEMINI_API_KEY` | - | **Required** Google Gemini API key |

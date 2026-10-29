@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Check, Sparkles, ShieldCheck } from 'lucide-react';
+import { Crown, Check, Sparkles, ShieldCheck, CreditCard } from 'lucide-react';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import Badge from './ui/Badge';
@@ -22,7 +22,7 @@ const PREMIUM_FEATURES = [
 ];
 
 /**
- * Pricing + demo checkout modal. Opened from anywhere via
+ * Pricing + Paystack checkout modal. Opened from anywhere via
  * useSubscriptionStore.openUpgrade(reason).
  */
 export default function UpgradeModal() {
@@ -34,6 +34,8 @@ export default function UpgradeModal() {
   const error = useSubscriptionStore((s) => s.error);
   const upgrade = useSubscriptionStore((s) => s.upgrade);
   const cancel = useSubscriptionStore((s) => s.cancel);
+  const priceLabel = useSubscriptionStore((s) => s.priceLabel);
+  const plan = useSubscriptionStore((s) => s.plan);
   const [step, setStep] = useState('plans');
   const [cancelling, setCancelling] = useState(false);
 
@@ -54,9 +56,9 @@ export default function UpgradeModal() {
 
   const handleCancel = async () => {
     setCancelling(true);
-    await cancel();
+    const ok = await cancel();
     setCancelling(false);
-    handleClose();
+    if (ok) handleClose();
   };
 
   return (
@@ -117,7 +119,7 @@ export default function UpgradeModal() {
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-slate-900 dark:text-white">
-                  {TIERS.premium.price}
+                  {priceLabel}
                 </span>
                 {isPremium && <Badge variant="amber">Current</Badge>}
               </div>
@@ -148,18 +150,30 @@ export default function UpgradeModal() {
         <div className="space-y-4">
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-600 text-sm space-y-1.5">
             <div className="flex justify-between text-slate-600 dark:text-slate-300">
-              <span>Premium plan</span>
-              <span className="font-semibold text-slate-900 dark:text-white">{TIERS.premium.price}</span>
+              <span>{plan?.name || 'Premium plan'}</span>
+              <span className="font-semibold text-slate-900 dark:text-white">{priceLabel}</span>
+            </div>
+            <div className="flex justify-between text-slate-600 dark:text-slate-300">
+              <span>Billing</span>
+              <span className="font-semibold text-slate-900 dark:text-white">
+                Recurring {plan?.interval || 'monthly'}
+              </span>
             </div>
             <div className="flex justify-between text-slate-600 dark:text-slate-300">
               <span>Total due today</span>
-              <span className="font-semibold text-slate-900 dark:text-white">{TIERS.premium.price}</span>
+              <span className="font-semibold text-slate-900 dark:text-white">{priceLabel}</span>
             </div>
           </div>
 
           <p className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
             <ShieldCheck className="w-4 h-4 flex-shrink-0 text-emerald-500" />
-            Demo checkout — no real payment is processed. Upgrading flips your account to premium instantly.
+            Secure checkout by Paystack. Recurring subscriptions are charged automatically to your card.
+            Cancel anytime.
+          </p>
+
+          <p className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <CreditCard className="w-4 h-4 flex-shrink-0 text-slate-400" />
+            Card payments only. You will complete the payment in the Paystack popup.
           </p>
 
           <div className="flex gap-2">
@@ -167,7 +181,7 @@ export default function UpgradeModal() {
               Back
             </Button>
             <Button fullWidth loading={loading} onClick={handleUpgrade} icon={<Crown className="w-4 h-4" />}>
-              Confirm upgrade
+              Continue to Paystack
             </Button>
           </div>
         </div>

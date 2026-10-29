@@ -36,3 +36,6 @@ class SubscriptionStatus(BaseModel):
     questions_used_this_month: int = 0
     questions_remaining: int
     expires_at: Optional[str] = None
+    status: str = "none"
+    plan_code: Optional[str] = None
+    renewal_date: Optional[str] = None

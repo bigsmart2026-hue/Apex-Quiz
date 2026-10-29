@@ -1,12 +1,13 @@
 """Main API router."""
 from fastapi import APIRouter
-from app.api.routes import auth, quiz, health, study_aids
+from app.api.routes import auth, quiz, health, study_aids, payments
 
 
 api_router = APIRouter(prefix="/api")
 
 api_router.include_router(health.router)
 api_router.include_router(auth.router)
+api_router.include_router(payments.router)
 api_router.include_router(quiz.router)
 api_router.include_router(study_aids.router)
 

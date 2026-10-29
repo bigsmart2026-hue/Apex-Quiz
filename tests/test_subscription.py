@@ -19,25 +19,12 @@ class TestSubscription:
     """Subscription tier tests (each uses a dedicated user for isolation)."""
 
     @pytest.mark.asyncio
-    async def test_upgrade_to_premium(self, client: AsyncClient):
-        """Free user can upgrade to premium via demo checkout."""
+    async def test_direct_upgrade_is_disabled(self, client: AsyncClient):
+        """The old demo upgrade must not grant premium without payment."""
         headers = await _register(client, "upgrade@example.com")
         response = await client.post("/api/auth/upgrade", json={"plan": "premium"}, headers=headers)
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["success"] is True
-        assert data["data"]["tier"] == "premium"
-        assert data["data"]["is_paid"] is True
-        assert data["data"]["question_limit"] == 50
-
-    @pytest.mark.asyncio
-    async def test_upgrade_unknown_plan_rejected(self, client: AsyncClient):
-        """Unknown plans are rejected."""
-        headers = await _register(client, "badplan@example.com")
-        response = await client.post("/api/auth/upgrade", json={"plan": "enterprise"}, headers=headers)
-
-        assert response.status_code == 400
+        assert response.status_code == 410
         assert response.json()["detail"]["code"] == "INVALID_REQUEST"
 
     @pytest.mark.asyncio

@@ -1,5 +1,7 @@
 """Application configuration using Pydantic Settings."""
+from decimal import Decimal, ROUND_HALF_UP
 from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,6 +39,23 @@ class Settings(BaseSettings):
     FREE_QUESTION_MIN: int = 5
     PREMIUM_QUESTION_MAX: int = 50
     PREMIUM_QUESTION_MIN: int = 10
+
+    # Paystack subscriptions
+    # Create the recurring plan in the Paystack dashboard first and paste its
+    # plan code here. Recurring charges are always driven by this plan.
+    PAYSTACK_SECRET_KEY: str = ""
+    PAYSTACK_PUBLIC_KEY: str = ""
+    PAYSTACK_BASE_URL: str = "https://api.paystack.co"
+    PAYSTACK_CALLBACK_URL: str = "http://localhost:5175/payment/callback"
+    PAYSTACK_PREMIUM_PLAN_CODE: str = ""
+    PAYSTACK_PREMIUM_PLAN_NAME: str = "Apex Quiz Premium"
+    # Base currency amount (e.g. 5000 NGN). Converted to the currency subunit
+    # (kobo/cents) before any Paystack API call.
+    PAYSTACK_PREMIUM_PRICE: Decimal = Decimal("5000")
+    PAYSTACK_CURRENCY: str = "NGN"
+    # Must match the interval configured on the Paystack plan.
+    PAYSTACK_PREMIUM_INTERVAL: str = "monthly"
+    PAYSTACK_REQUEST_TIMEOUT: float = 20.0
     
     # PDF Processing
     PDF_MAX_MB: int = 20
@@ -88,6 +107,15 @@ class Settings(BaseSettings):
     @property
     def pdf_max_bytes(self) -> int:
         return self.PDF_MAX_MB * 1024 * 1024
+
+    @property
+    def paystack_amount_subunit(self) -> int:
+        """Premium price in the lowest currency subunit (kobo/cents)."""
+        return int(
+            (self.PAYSTACK_PREMIUM_PRICE * 100).quantize(
+                Decimal("1"), rounding=ROUND_HALF_UP
+            )
+        )
 
 
 @lru_cache

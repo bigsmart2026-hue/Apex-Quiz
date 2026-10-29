@@ -14,9 +14,16 @@ from app.auth.security import (
 )
 from app.auth.dependencies import get_current_user
 from app.models.session import get_db_session
-from app.models.database import User, SubscriptionTier
+from app.models.database import (
+    PaystackSubscription,
+    PaystackSubscriptionStatus,
+    User,
+    SubscriptionTier,
+)
 from app.schemas.common import ErrorCode, ErrorDetail, SuccessResponse
 from app.schemas.subscription import SubscriptionStatus
+from app.services.paystack import PaystackError, paystack_client
+from app.services.paystack_webhooks import latest_subscription, utcnow
 
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
@@ -40,12 +47,6 @@ class TokenResponse(BaseModel):
 class RefreshRequest(BaseModel):
     """Token refresh request."""
     refresh_token: str
-
-
-class UpgradeRequest(BaseModel):
-    """Mock checkout request (demo billing — no real payment processed)."""
-    plan: str = Field(default="premium", max_length=32)
-    payment_token: Optional[str] = Field(default=None, max_length=255)
 
 
 @router.post("/register", response_model=SuccessResponse[TokenResponse], status_code=status.HTTP_201_CREATED)
@@ -249,23 +250,13 @@ async def get_current_user_info(user: User = Depends(get_current_user)):
 
 
 @router.get("/subscription", response_model=SuccessResponse[SubscriptionStatus])
-async def get_subscription_status(user: User = Depends(get_current_user)):
+async def get_subscription_status(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
     """Get current user's subscription status."""
-    from app.config.settings import get_settings
-    settings = get_settings()
-    
-    limit = settings.PREMIUM_QUESTION_MAX if user.is_paid else settings.FREE_QUESTION_MAX
-    
-    return SuccessResponse(
-        data=SubscriptionStatus(
-            tier="premium" if user.is_paid else "free",
-            is_paid=user.is_paid,
-            question_limit=limit,
-            questions_used_this_month=user.questions_generated_this_month,
-            questions_remaining=max(0, limit - user.questions_generated_this_month),
-            expires_at=user.subscription_expires_at.isoformat() if user.subscription_expires_at else None,
-        )
-    )
+    subscription = await latest_subscription(session, user.id)
+    return SuccessResponse(data=_subscription_status_payload(user, subscription))
 
 
 @router.post("/logout", response_model=SuccessResponse)
@@ -274,47 +265,49 @@ async def logout(response: Response):
     return SuccessResponse(message="Logged out successfully")
 
 
-def _subscription_status_payload(user: User) -> SubscriptionStatus:
+def _subscription_status_payload(
+    user: User,
+    subscription: Optional[PaystackSubscription] = None,
+) -> SubscriptionStatus:
     """Build subscription status for a user."""
     from app.config.settings import get_settings
     settings = get_settings()
     limit = settings.PREMIUM_QUESTION_MAX if user.is_paid else settings.FREE_QUESTION_MAX
+    expires_at = user.subscription_expires_at or (
+        subscription.next_payment_date if subscription else None
+    )
     return SubscriptionStatus(
         tier="premium" if user.is_paid else "free",
         is_paid=user.is_paid,
         question_limit=limit,
         questions_used_this_month=user.questions_generated_this_month,
         questions_remaining=max(0, limit - user.questions_generated_this_month),
-        expires_at=user.subscription_expires_at.isoformat() if user.subscription_expires_at else None,
+        expires_at=expires_at.isoformat() if expires_at else None,
+        status=(
+            subscription.status
+            if subscription is not None
+            else ("active" if user.is_paid else "none")
+        ),
+        plan_code=subscription.plan_code if subscription else None,
+        renewal_date=(
+            subscription.next_payment_date.isoformat()
+            if subscription and subscription.next_payment_date
+            else None
+        ),
     )
 
 
-@router.post("/upgrade", response_model=SuccessResponse[SubscriptionStatus])
-async def upgrade_subscription(
-    request: UpgradeRequest,
-    user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_db_session),
-):
-    """Upgrade to premium (demo checkout — no real payment processed)."""
-    if request.plan != "premium":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrorDetail(
-                code=ErrorCode.INVALID_REQUEST,
-                message=f"Unknown plan: {request.plan}",
-                recoverable=True,
-                suggestions=["Use plan 'premium'"]
-            ).model_dump(),
-        )
-
-    user.is_paid = True
-    user.tier = SubscriptionTier.PREMIUM
-    session.add(user)
-    await session.commit()
-
-    return SuccessResponse(
-        data=_subscription_status_payload(user),
-        message="Upgraded to premium",
+@router.post("/upgrade", response_model=SuccessResponse[SubscriptionStatus], deprecated=True)
+async def upgrade_subscription(user: User = Depends(get_current_user)):
+    """Deprecated demo upgrade — premium must be purchased through Paystack."""
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail=ErrorDetail(
+            code=ErrorCode.INVALID_REQUEST,
+            message="Direct upgrades are disabled. Start a Paystack checkout instead.",
+            recoverable=True,
+            suggestions=["POST /api/payments/paystack/initialize to start a subscription"],
+        ).model_dump(),
     )
 
 
@@ -323,13 +316,49 @@ async def cancel_subscription(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Cancel premium and return to the free tier."""
+    """Cancel the Paystack subscription, then return to the free tier."""
+    subscription = await latest_subscription(session, user.id)
+
+    # Ask Paystack to stop future charges before revoking local access.
+    if (
+        subscription is not None
+        and subscription.status
+        in (
+            PaystackSubscriptionStatus.ACTIVE.value,
+            PaystackSubscriptionStatus.PAST_DUE.value,
+        )
+        and subscription.subscription_code
+        and subscription.email_token
+    ):
+        try:
+            await paystack_client.disable_subscription(
+                subscription.subscription_code,
+                subscription.email_token,
+            )
+        except PaystackError as exc:
+            raise HTTPException(
+                status_code=exc.status_code,
+                detail=ErrorDetail(
+                    code=ErrorCode.PAYSTACK_ERROR,
+                    message=exc.message,
+                    recoverable=True,
+                    suggestions=["Try again, or contact support to cancel your plan."],
+                ).model_dump(),
+            )
+
     user.is_paid = False
     user.tier = SubscriptionTier.FREE
     session.add(user)
+
+    if subscription is not None:
+        subscription.status = PaystackSubscriptionStatus.CANCELLED.value
+        subscription.cancelled_at = utcnow()
+        subscription.updated_at = utcnow()
+        session.add(subscription)
+
     await session.commit()
 
     return SuccessResponse(
-        data=_subscription_status_payload(user),
+        data=_subscription_status_payload(user, subscription),
         message="Subscription cancelled",
     )
