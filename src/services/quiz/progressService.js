@@ -1,7 +1,7 @@
 /**
  * Per-category progress service.
  * Tracks user progress for each category independently.
- * Stored in Firestore: users/{uid}/categoryProgress/{categoryId}
+ * Firestore when configured, otherwise localStorage.
  */
 import {
   doc, getDoc, setDoc, serverTimestamp,
@@ -24,7 +24,20 @@ const DEFAULT_CATEGORY_PROGRESS = {
   seenQuestionHashes: [],
 };
 
+const localKey = (uid, categoryId) => `apex-quiz-progress:${uid}:${categoryId}`;
+
+function readLocalProgress(uid, categoryId) {
+  try {
+    const raw = localStorage.getItem(localKey(uid, categoryId));
+    if (raw) return { ...DEFAULT_CATEGORY_PROGRESS, ...JSON.parse(raw) };
+  } catch {
+    // start fresh
+  }
+  return { ...DEFAULT_CATEGORY_PROGRESS };
+}
+
 export async function getCategoryProgress(uid, categoryId) {
+  if (!db) return readLocalProgress(uid, categoryId);
   const ref = doc(db, USERS_COLLECTION, uid, 'categoryProgress', categoryId);
   const snap = await getDoc(ref);
   if (!snap.exists()) return { ...DEFAULT_CATEGORY_PROGRESS };
@@ -32,7 +45,6 @@ export async function getCategoryProgress(uid, categoryId) {
 }
 
 export async function saveCategoryProgress(uid, categoryId, result, newHashes = []) {
-  const ref = doc(db, USERS_COLLECTION, uid, 'categoryProgress', categoryId);
   const current = await getCategoryProgress(uid, categoryId);
 
   const newTotal = current.totalQuestions + result.total;
@@ -61,14 +73,24 @@ export async function saveCategoryProgress(uid, categoryId, result, newHashes = 
     incorrectAnswers: newIncorrect,
     totalPoints: newPoints,
     lastQuizPercentage: result.percentage,
-    lastPlayedAt: serverTimestamp(),
+    lastPlayedAt: Date.now(),
     quizzesCompleted: current.quizzesCompleted + 1,
     masteryPercentage: masteryPct,
     levelsUnlocked,
     seenQuestionHashes,
   };
 
-  await setDoc(ref, updated, { merge: true });
+  if (!db) {
+    try {
+      localStorage.setItem(localKey(uid, categoryId), JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+    return updated;
+  }
+
+  const ref = doc(db, USERS_COLLECTION, uid, 'categoryProgress', categoryId);
+  await setDoc(ref, { ...updated, lastPlayedAt: serverTimestamp() }, { merge: true });
   return updated;
 }
 

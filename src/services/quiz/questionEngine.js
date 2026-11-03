@@ -12,6 +12,7 @@ import {
   fetchFirestoreQuestions,
   saveQuestionsToFirestore,
 } from '../trivia/firestoreQuestionService';
+import { loadLocalBankQuestions } from './localBankService';
 import { validateQuestion } from '../../utils/questionValidator';
 import { shuffleArray, shuffleQuestionOptions } from '../../utils/shuffleArray';
 
@@ -166,6 +167,22 @@ export async function getQuizQuestions({ categoryId, userLevel = 1, amount = 10,
       } catch {
         // continue
       }
+    }
+  }
+
+  if (questions.length === 0) {
+    // Final fallback: bundled local bank (works fully offline, covers some categories)
+    try {
+      const local = await loadLocalBankQuestions(categoryId, difficulty, amount);
+      const fresh = (local || []).filter((q) => {
+        const hash = computeQuestionHash(q.text, q.options);
+        if (sessionHashes.has(hash)) return false;
+        sessionHashes.add(hash);
+        return true;
+      });
+      questions = [...questions, ...fresh];
+    } catch {
+      // no local bank for this category
     }
   }
 

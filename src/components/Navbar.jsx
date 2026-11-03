@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Trophy, Swords, Bell, Check } from 'lucide-react';
+import { Trophy, Swords, Bell, Check, FilePlus2, LogOut } from 'lucide-react';
 import useQuizStore from '../store/useQuizStore';
 import { useProfileStore } from '../store/useProfileStore';
 import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
+import SubscriptionBadge from './SubscriptionBadge';
 import { listenNotifications, markAllRead, markNotificationRead } from '../services/notification.service';
 import { joinChallenge } from '../services/challenge.service';
 import Logo from './Logo';
@@ -44,18 +45,6 @@ export default function Navbar({ showLeaderboard = true }) {
     return () => document.removeEventListener('mousedown', onClick);
   }, [panelOpen]);
 
-  const handleLogout = async () => {
-    setLogoutLoading(true);
-    try {
-      await logoutUser();
-      navigate('/login', { replace: true });
-    } catch {
-      // Session may already be cleared; login guard handles the rest
-    } finally {
-      setLogoutLoading(false);
-    }
-  };
-
   const handleNotificationClick = async (notif) => {
     if (!notif.read) {
       markNotificationRead(user.uid, notif.id).catch(() => {});
@@ -74,6 +63,18 @@ export default function Navbar({ showLeaderboard = true }) {
     }
   };
 
+  const handleLogout = async () => {
+    setLogoutLoading(true);
+    try {
+      await logoutUser();
+      navigate('/login', { replace: true });
+    } catch {
+      // Session may already be cleared; login guard handles the rest
+    } finally {
+      setLogoutLoading(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-b border-white/20 dark:border-white/10 px-3 sm:px-6 py-2.5 sm:py-3">
       <div className="w-full flex items-center justify-between gap-2 sm:gap-3">
@@ -89,6 +90,17 @@ export default function Navbar({ showLeaderboard = true }) {
           )}
 
           <ThemeToggle />
+
+          <SubscriptionBadge />
+
+          <Link
+            to="/create"
+            className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+            title="Create a quiz from PDF or text"
+          >
+            <FilePlus2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Create</span>
+          </Link>
 
           {showLeaderboard && (
             <Link
@@ -227,15 +239,18 @@ export default function Navbar({ showLeaderboard = true }) {
             </Link>
           )}
 
+          {user && (
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleLogout}
               disabled={logoutLoading}
               className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer disabled:opacity-50"
             >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Logout</span>
-          </motion.button>
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </motion.button>
+          )}
+
         </div>
       </div>
     </header>

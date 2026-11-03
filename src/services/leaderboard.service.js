@@ -23,8 +23,29 @@ const decorate = (snapshot) =>
     };
   });
 
+function localLeaderboard() {
+  try {
+    const raw = localStorage.getItem('apex-quiz-local-profile');
+    const profile = raw ? JSON.parse(raw) : {};
+    return [{
+      uid: 'local-guest',
+      displayName: 'Guest',
+      photoURL: null,
+      xp: profile.xp || 0,
+      weeklyXp: profile.weeklyXp || 0,
+      level: getLevel(profile.xp || 0),
+      levelName: getLevelName(profile.xp || 0),
+      rank: 1,
+      isOnline: true,
+    }];
+  } catch {
+    return [];
+  }
+}
+
 /** Global leaderboard — top users by total XP. */
 export async function getGlobalLeaderboard() {
+  if (!db) return localLeaderboard();
   const q = query(
     collection(db, USERS_COLLECTION),
     orderBy('xp', 'desc'),
@@ -36,6 +57,7 @@ export async function getGlobalLeaderboard() {
 
 /** Weekly leaderboard — top users by XP earned this week. */
 export async function getWeeklyLeaderboard() {
+  if (!db) return localLeaderboard();
   const q = query(
     collection(db, USERS_COLLECTION),
     orderBy('weeklyXp', 'desc'),

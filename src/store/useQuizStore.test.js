@@ -27,10 +27,6 @@ vi.mock('../services/triviaApi', () => ({
   fetchTriviaQuestions: vi.fn().mockRejectedValue(new Error('network down')),
 }));
 
-vi.mock('../services/firestore.service', () => ({
-  fetchQuiz: vi.fn().mockRejectedValue(new Error('no quiz')),
-}));
-
 const questions = [
   { id: 'q1', text: 'A', options: ['x', 'y'], correctAnswer: 0 },
   { id: 'q2', text: 'B', options: ['x', 'y'], correctAnswer: 1 },

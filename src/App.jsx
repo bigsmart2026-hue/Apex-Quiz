@@ -6,11 +6,13 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { lightTheme, darkTheme } from './theme/muiTheme';
 import useQuizStore from './store/useQuizStore';
 import { useProfileStore } from './store/useProfileStore';
+import { useSubscriptionStore } from './store/useSubscriptionStore';
 import { updateLastSeen } from './services/profile.service';
-import ProtectedRoute from './components/ProtectedRoute';
 import PageTransition from './components/PageTransition';
+import ProtectedRoute from './components/ProtectedRoute';
 import { Background } from './components/Background';
 import ToastHost from './components/ToastHost';
+import UpgradeModal from './components/UpgradeModal';
 
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
@@ -20,6 +22,7 @@ const ResultsPage = lazy(() => import('./pages/ResultsPage'));
 const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ChallengesPage = lazy(() => import('./pages/ChallengesPage'));
+const CreateQuizPage = lazy(() => import('./pages/CreateQuizPage'));
 
 function PageLoader() {
   return (
@@ -36,6 +39,12 @@ export default function App() {
   const muiTheme = theme === 'dark' ? darkTheme : lightTheme;
   const loadProfile = useProfileStore((s) => s.loadProfile);
   const clearProfile = useProfileStore((s) => s.clearProfile);
+  const refreshSubscription = useSubscriptionStore((s) => s.refresh);
+
+  // No auto-guest login — real Firebase auth handles it via useFirebaseAuth hook
+  useEffect(() => {
+    refreshSubscription();
+  }, [refreshSubscription]);
 
   useEffect(() => {
     if (user) {
@@ -67,12 +76,15 @@ export default function App() {
         <CssBaseline />
         <Background />
         <ToastHost />
+        <UpgradeModal />
         <Suspense fallback={<PageLoader />}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
+              {/* Public auth pages */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
+              {/* Protected app routes */}
               <Route
                 path="/"
                 element={
@@ -129,6 +141,16 @@ export default function App() {
                   <ProtectedRoute>
                     <PageTransition>
                       <ChallengesPage />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/create"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <CreateQuizPage />
                     </PageTransition>
                   </ProtectedRoute>
                 }

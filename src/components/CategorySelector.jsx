@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Flame, Trophy, Puzzle, Zap, ChevronRight } from 'lucide-react';
+import { Flame, Trophy, Puzzle, Zap, ChevronRight, FileUp } from 'lucide-react';
 import useQuizStore from '../store/useQuizStore';
 import { useProfileStore } from '../store/useProfileStore';
+import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import Navbar from './Navbar';
 import LevelBadge from './LevelBadge';
 import DailyChallengeCard from './DailyChallengeCard';
@@ -27,6 +28,7 @@ export default function CategorySelector() {
 
   const profile = useProfileStore((s) => s.profile);
   const levelInfo = useProfileStore((s) => s.levelInfo);
+  const questionLimit = useSubscriptionStore((s) => s.questionLimit);
 
   useEffect(() => {
     if (user) hasCompletedDailyChallenge(user.uid).then(setDailyDone).catch(() => {});
@@ -123,6 +125,27 @@ export default function CategorySelector() {
           {/* Daily challenge */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <DailyChallengeCard completedToday={dailyDone} streak={profile?.currentStreak || 0} />
+          </motion.div>
+
+          {/* AI quiz creation */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+            <Card className="p-5 flex flex-col sm:flex-row items-center gap-4 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-slate-800">
+              <div className="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0">
+                <FileUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <p className="font-semibold text-slate-900 dark:text-white">Turn any PDF into a quiz</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Upload study notes and get AI-generated questions instantly — up to {questionLimit} per quiz on your plan.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/create')}
+                className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-sm font-semibold transition-colors cursor-pointer flex-shrink-0"
+              >
+                Create a quiz
+              </button>
+            </Card>
           </motion.div>
 
           {/* Achievements preview */}

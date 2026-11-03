@@ -95,6 +95,18 @@ const useQuizStore = create(
       clearChallenge: () => set({ challenge: null, isDaily: false }),
 
       /**
+       * Starts a quiz with an explicit question list (e.g. AI-generated
+       * from a PDF). Results save under the given category id.
+       */
+      startCustomQuiz: (category, questions) => {
+        const playerLevel = useProfileStore.getState().profile?.unlockedLevel || 1;
+        const { timerDuration } = getQuizConfig(playerLevel);
+        set({ category, isDaily: false, challenge: null });
+        const difficulty = questions[0]?.difficulty || 'easy';
+        applyQuestions(set, questions, timerDuration, { currentDifficulty: difficulty });
+      },
+
+      /**
        * Loads questions for a category using the centralized question engine.
        * Reads per-category progress to determine difficulty level.
        */
@@ -189,20 +201,6 @@ const useQuizStore = create(
 
         set({ isFinished: true, score: finalScore, savingResult: true });
 
-        if (!user?.uid) {
-          console.error('[quiz] user not authenticated — cannot save');
-          set({
-            completionSummary: {
-              xpGained: 0, level: null, leveledUp: false, streak: null,
-              newAchievements: [], accuracyPct: getAccuracy(finalScore, total),
-              timeTakenMs, avgAnswerSec, totalAnswered: total, correctAnswers: finalScore,
-              error: 'Not signed in — result saved locally only.',
-            },
-            savingResult: false,
-          });
-          return;
-        }
-
         try {
           if (challenge) {
             const isCreator = challenge.creatorId === user.uid;
@@ -294,8 +292,7 @@ const useQuizStore = create(
           }
         } catch (err) {
           console.error('[quiz] save failed:', err);
-          const alreadyPlayed = err.message === 'QUIZ_ALREADY_PLAYED';
-          set({
+          const alreadyPlayed = err.message === 'QUIZ_ALREADY_PLAYED';          set({
             completionSummary: {
               xpGained: 0, level: null, leveledUp: false, streak: null,
               newAchievements: [], accuracyPct: getAccuracy(finalScore, total),
@@ -320,9 +317,7 @@ const useQuizStore = create(
           console.error('[leaderboard] load failed:', err);
           set({
             leaderboard: [],
-            leaderboardError: err?.code === 'permission-denied'
-              ? 'Leaderboard access denied — deploy the Firestore security rules.'
-              : 'Something went wrong while loading the leaderboard.',
+            leaderboardError: 'Something went wrong while loading the leaderboard.',
           });
         }
       },
