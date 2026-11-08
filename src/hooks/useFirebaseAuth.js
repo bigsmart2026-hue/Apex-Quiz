@@ -122,12 +122,15 @@ export function useFirebaseAuth() {
       const cred = await signInWithPopup(auth, provider);
       if (cred?.user) login(toAppUser(cred.user));
     } catch (err) {
+      clearRedirectPending();
       let finalError = err;
       if (POPUP_FALLBACK_CODES.has(err?.code)) {
         try {
+          markRedirectPending();
           await signInWithRedirect(auth, provider);
           return;
         } catch (redirectErr) {
+          clearRedirectPending();
           finalError = redirectErr;
         }
       }
