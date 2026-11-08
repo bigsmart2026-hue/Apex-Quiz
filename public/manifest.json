@@ -1,13 +1,26 @@
 {
+  "id": "/",
   "name": "Apex Quiz",
   "short_name": "Apex Quiz",
   "description": "Timed trivia across 12 categories. Compete for the top of the leaderboard.",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#0f172a",
   "theme_color": "#f59e0b",
   "orientation": "portrait",
+  "categories": ["education", "games", "trivia"],
+  "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "/logo-emblem-64.png",
+      "sizes": "64x64",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/logo-emblem-192.png",
       "sizes": "192x192",
@@ -25,6 +38,47 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Play a quiz",
+      "short_name": "Play",
+      "description": "Jump straight into a new quiz",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/logo-emblem-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Leaderboard",
+      "short_name": "Leaderboard",
+      "description": "See where you rank",
+      "url": "/leaderboard",
+      "icons": [
+        {
+          "src": "/logo-emblem-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Challenges",
+      "short_name": "Challenges",
+      "description": "Challenge a friend",
+      "url": "/challenges",
+      "icons": [
+        {
+          "src": "/logo-emblem-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

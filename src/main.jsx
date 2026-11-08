@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
+import PwaPrompt from './components/PwaPrompt';
+import { registerServiceWorker } from './pwa/registerServiceWorker';
 import './index.css';
 
 createRoot(document.getElementById('root')).render(
@@ -10,13 +12,10 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <ErrorBoundary>
         <App />
+        <PwaPrompt />
       </ErrorBoundary>
     </BrowserRouter>
   </StrictMode>,
 );
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
-}
+registerServiceWorker();

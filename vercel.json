@@ -8,5 +8,21 @@
       "memory": 1024,
       "excludeFiles": "{node_modules/**,.venv/**,venv/**,tests/**,.pytest_cache/**,**/__pycache__/**,*.db,dev_*.txt,seed_error.txt,.firebase/**,src/**,public/**,scripts/**,seed.js,firebase.json,firebase.indexes.json,docker-compose.yml,Dockerfile,README.md}"
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" },
+        { "key": "Content-Type", "value": "application/manifest+json" }
+      ]
+    }
+  ]
 }
