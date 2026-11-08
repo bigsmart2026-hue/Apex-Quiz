@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "fastapi",
+  "buildCommand": "npm ci && npm run build",
+  "functions": {
+    "app/main.py": {
+      "maxDuration": 60,
+      "memory": 1024,
+      "excludeFiles": "{node_modules/**,.venv/**,venv/**,tests/**,.pytest_cache/**,**/__pycache__/**,*.db,dev_*.txt,seed_error.txt,.firebase/**,src/**,public/**,scripts/**,seed.js,firebase.json,firebase.indexes.json,docker-compose.yml,Dockerfile,README.md}"
+    }
+  }
+}

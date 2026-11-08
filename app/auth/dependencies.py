@@ -10,6 +10,10 @@ from app.models.database import User
 from app.models.session import get_db_session
 from app.config.settings import get_settings
 from app.schemas.common import ErrorCode, ErrorDetail
+from app.services.subscription import (
+    refresh_expired_subscription,
+    subscription_is_expired,
+)
 
 
 settings = get_settings()
@@ -46,6 +50,9 @@ async def get_current_user_optional(
 
     if not user or not user.is_active:
         return None
+
+    if subscription_is_expired(user):
+        await refresh_expired_subscription(user, session)
 
     return user
 
@@ -105,7 +112,10 @@ async def get_current_user(
                 recoverable=False
             ).model_dump(),
         )
-    
+
+    if subscription_is_expired(user):
+        await refresh_expired_subscription(user, session)
+
     return user
 
 

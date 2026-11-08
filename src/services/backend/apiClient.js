@@ -8,7 +8,8 @@
  * Backend error bodies are `{ detail: { code, message, suggestions } }`.
  */
 
-const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000').replace(/\/$/, '');
+const DEFAULT_BACKEND_URL = import.meta.env.DEV ? 'http://localhost:8000' : '';
+const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL ?? DEFAULT_BACKEND_URL).replace(/\/$/, '');
 
 const TOKEN_KEY = 'apex-quiz-backend-tokens';
 const CRED_KEY = 'apex-quiz-backend-guest';

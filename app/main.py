@@ -1,6 +1,8 @@
 """Main FastAPI application."""
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,6 +19,9 @@ from app.services.cache import close_cache
 
 
 settings = get_settings()
+
+# Built Vite output (created by `npm run build`; present on Vercel).
+FRONTEND_DIR = Path(__file__).resolve().parents[1] / "dist"
 
 # Configure logging
 logging.basicConfig(
@@ -72,7 +77,12 @@ def create_app() -> FastAPI:
     
     # Include API router
     app.include_router(api_router)
-    
+
+    # Serve the built Vite SPA when it exists. On Vercel the assets are also
+    # promoted to the CDN; locally this lets a production build run on :8000.
+    if FRONTEND_DIR.is_dir():
+        app.frontend("/", directory=str(FRONTEND_DIR), fallback="index.html")
+
     return app
 
 

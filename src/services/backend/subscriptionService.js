@@ -1,5 +1,5 @@
 /**
- * Subscription status: backend when reachable, local fallback otherwise.
+ * Subscription status and Paystack checkout.
  */
 import { apiFetch, ensureBackendSession, BackendUnavailableError } from './apiClient';
 import { FREE_TIER, PREMIUM_TIER } from '../../utils/constants';
@@ -30,17 +30,45 @@ export async function fetchSubscriptionStatus() {
   return normalize(data);
 }
 
-/** Demo checkout — flips the backend flag, no real payment. */
-export async function upgradeToPremium() {
+/** Fetch the configured Paystack plan (real price/currency/interval). */
+export async function fetchPremiumPlan() {
+  await ensureBackendSession();
+  const { data } = await apiFetch('/api/auth/upgrade/plan');
+  return {
+    name: data.name,
+    amount: data.amount,
+    currency: data.currency,
+    interval: data.interval,
+  };
+}
+
+/**
+ * Create a Paystack transaction and return the hosted checkout URL.
+ * The caller redirects the browser to `authorizationUrl`.
+ */
+export async function initializePremiumCheckout(callbackUrl, email) {
   await ensureBackendSession();
   const { data } = await apiFetch('/api/auth/upgrade', {
     method: 'POST',
-    json: { plan: 'premium' },
+    json: { callback_url: callbackUrl, ...(email ? { email } : {}) },
   });
+  return {
+    authorizationUrl: data.authorization_url,
+    accessCode: data.access_code,
+    reference: data.reference,
+  };
+}
+
+/** Verify a completed Paystack payment and activate premium. */
+export async function verifyPremiumPayment(reference) {
+  await ensureBackendSession();
+  const { data } = await apiFetch(
+    `/api/auth/upgrade/verify?reference=${encodeURIComponent(reference)}`,
+  );
   return normalize(data);
 }
 
-/** Cancel premium and return to free. */
+/** Stop the Paystack subscription and return to free. */
 export async function cancelSubscription() {
   await ensureBackendSession();
   const { data } = await apiFetch('/api/auth/cancel', { method: 'POST', json: {} });

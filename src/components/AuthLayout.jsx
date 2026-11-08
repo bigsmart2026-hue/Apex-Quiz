@@ -22,7 +22,7 @@ export default function AuthLayout({ title, subtitle, children }) {
         <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-xl border border-white/30 dark:border-white/10 rounded-2xl p-8 sm:p-10 shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
           <div className="text-center space-y-4 mb-8">
             <div className="flex items-center justify-center">
-              <Logo size={88} showWordmark={false} animate />
+              <Logo size={160} showWordmark={false} animate />
             </div>
             <h1 className="text-3xl sm:text-4xl text-slate-900 dark:text-white font-heading">
               {title}

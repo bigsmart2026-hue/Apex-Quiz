@@ -1,19 +1,24 @@
 import { motion } from 'framer-motion';
 
-export default function Logo({ size = 56, className = '', showWordmark = true, animate = false }) {
-  const imgSize = Math.round(size);
-
+export default function Logo({ size = 108, className = '', showWordmark = true, animate = false }) {
   const Symbol = (
     <div
-      className="flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 shadow-sm"
+      className="relative flex items-center justify-center select-none"
       style={{ width: size, height: size }}
     >
+      <span
+        aria-hidden="true"
+        className="absolute inset-1 rounded-full bg-amber-400/20 blur-lg dark:bg-amber-400/25"
+      />
       <img
-        src="/images-removebg-preview.png"
-        width={imgSize}
-        height={imgSize}
+        src="/logo-emblem-192.png"
+        width={size}
+        height={size}
         alt="Apex Quiz logo"
-        style={{ objectFit: 'contain' }}
+        draggable={false}
+        decoding="async"
+        fetchPriority="high"
+        className="relative h-full w-full object-contain drop-shadow-[0_2px_7px_rgba(245,158,11,0.35)]"
       />
     </div>
   );
@@ -47,7 +52,7 @@ export default function Logo({ size = 56, className = '', showWordmark = true, a
       ) : (
         Symbol
       )}
-      <span className="text-2xl font-bold tracking-tight text-amber-500 dark:text-amber-400 hidden sm:block font-heading">
+      <span className="hidden sm:block font-heading text-4xl font-bold tracking-tight bg-gradient-to-b from-amber-500 to-amber-700 bg-clip-text text-transparent dark:from-amber-200 dark:to-amber-400">
         APEX QUIZ
       </span>
     </div>

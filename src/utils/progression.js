@@ -36,6 +36,8 @@ export const getLevelInfo = (unlockedLevel = 1) => {
   return LEVELS.find((l) => l.level === Math.min(unlockedLevel, MAX_LEVEL)) || LEVELS[0];
 };
 
+const XP_THRESHOLDS = [0, 100, 250, 450, 700, 1000, 1400];
+
 /** Legacy compat: derive level number from xp for leaderboard display */
 export const getLevel = (xp) => {
   if (xp >= 1400) return 7;
@@ -45,6 +47,21 @@ export const getLevel = (xp) => {
   if (xp >= 250) return 3;
   if (xp >= 100) return 2;
   return 1;
+};
+
+/** XP still needed to reach the next level (0 at max level). */
+export const xpToNextLevel = (xp) => {
+  const next = XP_THRESHOLDS.find((threshold) => threshold > xp);
+  return next === undefined ? 0 : next - xp;
+};
+
+/** Fraction (0-1) of progress through the current level. */
+export const xpProgress = (xp) => {
+  const level = getLevel(xp);
+  if (level >= XP_THRESHOLDS.length) return 0;
+  const currentThreshold = XP_THRESHOLDS[level - 1];
+  const nextThreshold = XP_THRESHOLDS[level];
+  return (xp - currentThreshold) / (nextThreshold - currentThreshold);
 };
 
 export const getLevelName = (xp) => {
@@ -93,7 +110,8 @@ export const computeQuizXp = ({ score, total, isDaily = false, streak = 0, avgAn
   const streakBonus = Math.min(Math.max(streak, 0), XP_STREAK_BONUS_CAP) * XP_STREAK_BONUS;
   const levelBonus = levelCompleted ? XP_LEVEL_COMPLETION : 0;
   const raw = base + perfect + speed + streakBonus + levelBonus;
-  return isDaily ? Math.round(raw * XP_DAILY_MULTIPLIER) : raw;
+  const totalXp = isDaily ? Math.round(raw * XP_DAILY_MULTIPLIER) : raw;
+  return Math.min(totalXp, MAX_XP_PER_QUIZ);
 };
 
 export const getAccuracy = (score, total) => (total > 0 ? Math.round((score / total) * 100) : 0);

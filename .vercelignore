@@ -1,0 +1,18 @@
+# Never upload local secrets or build artifacts.
+.env
+.env.*
+!.env.example
+node_modules
+.venv
+venv
+dist
+.pytest_cache
+__pycache__
+*.pyc
+*.db
+dev_*.txt
+seed_error.txt
+.firebase
+tests
+# Original high-resolution logo source; optimized derivatives are in public/.
+public/Ornate*

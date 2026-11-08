@@ -32,8 +32,10 @@ class User(SQLModel, table=True):
     )
     is_paid: bool = Field(default=False, sa_column=Column(Boolean, nullable=False, default=False))
     subscription_expires_at: Optional[datetime] = Field(default=None)
-    stripe_customer_id: Optional[str] = Field(default=None, sa_column=Column(String(255)))
-    stripe_subscription_id: Optional[str] = Field(default=None, sa_column=Column(String(255)))
+    paystack_customer_id: Optional[str] = Field(default=None, sa_column=Column(String(255)))
+    paystack_subscription_id: Optional[str] = Field(default=None, sa_column=Column(String(255)))
+    paystack_email_token: Optional[str] = Field(default=None, sa_column=Column(String(255)))
+    paystack_reference: Optional[str] = Field(default=None, sa_column=Column(String(255)))
 
     # Usage tracking
     questions_generated_this_month: int = Field(default=0, sa_column=Column(Integer, nullable=False, default=0))

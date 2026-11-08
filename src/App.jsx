@@ -23,6 +23,7 @@ const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ChallengesPage = lazy(() => import('./pages/ChallengesPage'));
 const CreateQuizPage = lazy(() => import('./pages/CreateQuizPage'));
+const PaymentCallbackPage = lazy(() => import('./pages/PaymentCallbackPage'));
 
 function PageLoader() {
   return (
@@ -83,6 +84,7 @@ export default function App() {
               {/* Public auth pages */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/payment/callback" element={<PaymentCallbackPage />} />
 
               {/* Protected app routes */}
               <Route

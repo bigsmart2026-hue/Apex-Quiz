@@ -67,6 +67,16 @@ async def test_user(db_session: AsyncSession) -> User:
     result = await db_session.execute(select(User).where(User.email == "test@example.com"))
     existing = result.scalars().first()
     if existing:
+        existing.is_paid = False
+        existing.tier = SubscriptionTier.FREE
+        existing.subscription_expires_at = None
+        existing.paystack_customer_id = None
+        existing.paystack_subscription_id = None
+        existing.paystack_email_token = None
+        existing.paystack_reference = None
+        db_session.add(existing)
+        await db_session.commit()
+        await db_session.refresh(existing)
         return existing
     user = User(
         email="test@example.com",
@@ -88,6 +98,16 @@ async def premium_user(db_session: AsyncSession) -> User:
     result = await db_session.execute(select(User).where(User.email == "premium@example.com"))
     existing = result.scalars().first()
     if existing:
+        existing.is_paid = True
+        existing.tier = SubscriptionTier.PREMIUM
+        existing.subscription_expires_at = None
+        existing.paystack_customer_id = None
+        existing.paystack_subscription_id = None
+        existing.paystack_email_token = None
+        existing.paystack_reference = None
+        db_session.add(existing)
+        await db_session.commit()
+        await db_session.refresh(existing)
         return existing
     user = User(
         email="premium@example.com",

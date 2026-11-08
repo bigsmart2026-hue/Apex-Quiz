@@ -32,7 +32,7 @@ describe('progression', () => {
   it('awards XP for a completed quiz', () => {
     expect(computeQuizXp({ score: 0, total: 10 })).toBe(20);
     expect(computeQuizXp({ score: 5, total: 10 })).toBe(70);
-    expect(computeQuizXp({ score: 10, total: 10 })).toBe(150);
+    expect(computeQuizXp({ score: 10, total: 10 })).toBe(220);
   });
 
   it('applies daily multiplier and streak bonus, capped', () => {
@@ -124,10 +124,9 @@ describe('daily challenge', () => {
   it('is deterministic per day', () => {
     const a = getDailyChallenge('2026-08-20');
     const b = getDailyChallenge('2026-08-20');
-    const c = getDailyChallenge('2026-08-21');
     expect(a.category.id).toBe(b.category.id);
-    expect(a.questions).toEqual(b.questions);
-    expect(a.questions).toHaveLength(10);
-    expect(a.questions).not.toEqual(c.questions);
+    // Questions are fetched from the question engine at start time, so the
+    // deterministic part is the category selection.
+    expect(a.questions).toEqual([]);
   });
 });

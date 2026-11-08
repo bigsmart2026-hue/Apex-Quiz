@@ -64,6 +64,15 @@ class Settings(BaseSettings):
     STUDY_AID_MAX_OUTPUT_TOKENS: int = 8192
     STUDY_AID_GROUNDING_MIN_CHARS: int = 8
     
+    # Paystack payments
+    PAYSTACK_SECRET_KEY: str = ""
+    PAYSTACK_PUBLIC_KEY: str = ""
+    PAYSTACK_PLAN_CODE: str = ""
+    PAYSTACK_CURRENCY: str = "USD"
+    # Amount in the currency's smallest unit (e.g. 499 = $4.99).
+    PAYSTACK_AMOUNT: int = 499
+    PAYSTACK_CALLBACK_URL: str = "http://localhost:5175/payment/callback"
+
     # Redis Cache
     REDIS_URL: str = "redis://localhost:6379/0"
     CACHE_TTL_SECONDS: int = 3600
