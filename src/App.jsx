@@ -7,7 +7,8 @@ import { lightTheme, darkTheme } from './theme/muiTheme';
 import useQuizStore from './store/useQuizStore';
 import { useProfileStore } from './store/useProfileStore';
 import { useSubscriptionStore } from './store/useSubscriptionStore';
-import { updateLastSeen } from './services/profile.service';
+import { useFirebaseAuth } from './hooks/useFirebaseAuth';
+import { updateLastSeen, syncPremiumStatus } from './services/profile.service';
 import PageTransition from './components/PageTransition';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Background } from './components/Background';
@@ -38,14 +39,19 @@ export default function App() {
   const user = useQuizStore((s) => s.user);
   const location = useLocation();
   const muiTheme = theme === 'dark' ? darkTheme : lightTheme;
+  const profile = useProfileStore((s) => s.profile);
   const loadProfile = useProfileStore((s) => s.loadProfile);
   const clearProfile = useProfileStore((s) => s.clearProfile);
   const refreshSubscription = useSubscriptionStore((s) => s.refresh);
+  const tier = useSubscriptionStore((s) => s.tier);
+  const backendAvailable = useSubscriptionStore((s) => s.backendAvailable);
+  const { loading: authLoading } = useFirebaseAuth();
 
   // No auto-guest login — real Firebase auth handles it via useFirebaseAuth hook
   useEffect(() => {
+    if (!user) return;
     refreshSubscription();
-  }, [refreshSubscription]);
+  }, [user, refreshSubscription]);
 
   useEffect(() => {
     if (user) {
@@ -54,6 +60,11 @@ export default function App() {
       clearProfile();
     }
   }, [user, loadProfile, clearProfile]);
+
+  useEffect(() => {
+    if (!user || !profile || !backendAvailable) return;
+    syncPremiumStatus(user.uid, tier === 'premium');
+  }, [user, profile, backendAvailable, tier]);
 
   useEffect(() => {
     if (!user) return;
@@ -70,6 +81,8 @@ export default function App() {
       clearInterval(interval);
     };
   }, [user]);
+
+  if (authLoading) return <PageLoader />;
 
   return (
     <StyledEngineProvider injectFirst>

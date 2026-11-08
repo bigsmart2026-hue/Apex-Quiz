@@ -130,5 +130,6 @@ export const DEFAULT_PROFILE = {
   weekStart: null,
   achievements: {},
   categoryStats: {},
+  isPremium: false,
   lastSeen: null,
 };

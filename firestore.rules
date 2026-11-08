@@ -60,7 +60,9 @@ service cloud.firestore {
         && (request.resource.data.weekStart == null
             || request.resource.data.weekStart is string)
         && request.resource.data.achievements is map
-        && request.resource.data.categoryStats is map;
+        && request.resource.data.categoryStats is map
+        // Cosmetic premium marker mirrored from the backend subscription status
+        && (!('isPremium' in request.resource.data) || request.resource.data.isPremium is bool);
       allow delete: if false;
 
       // ---------- Notifications ----------

@@ -3,6 +3,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AuthLayout from '../components/AuthLayout';
 import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
+import { getAuthErrorMessage } from '../utils/authErrors';
 
 export default function LoginPage() {
   const { user, loginWithEmail, loginWithGoogle, authError, clearAuthError } = useFirebaseAuth();
@@ -47,7 +48,7 @@ export default function LoginPage() {
       await loginWithGoogle();
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.code === 'auth/popup-closed-by-user' ? null : 'Google sign-in failed. Please try again.');
+      setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }

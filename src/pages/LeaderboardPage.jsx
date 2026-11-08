@@ -240,8 +240,13 @@ export default function LeaderboardPage() {
                     #{myRank + 1}
                   </span>
                   <Avatar src={user?.photoURL} name={user?.displayName} size={36} />
-                  <span className="font-semibold text-slate-900 dark:text-white flex-1 truncate">
-                    You
+                  <span className="font-semibold text-slate-900 dark:text-white flex-1 min-w-0 flex items-center gap-1.5">
+                    <span className="truncate">You</span>
+                    {leaderboard[myRank].isPremium && (
+                      <span title="Premium member" className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                        <Crown className="w-2.5 h-2.5" />
+                      </span>
+                    )}
                   </span>
                   <Badge variant="amber">{leaderboard[myRank].xp.toLocaleString()} XP</Badge>
                 </div>
@@ -274,7 +279,7 @@ export default function LeaderboardPage() {
                         )}
                       </div>
 
-                      <div className="relative flex-shrink-0">
+                      <div className={`relative flex-shrink-0 ${entry.isPremium ? 'rounded-full ring-2 ring-amber-400/80 ring-offset-2 ring-offset-white dark:ring-offset-slate-800' : ''}`}>
                         <Avatar src={entry.photoURL} name={entry.displayName} size={32} />
                         <span
                           className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-xl border-2 border-white dark:border-slate-800 ${
@@ -287,6 +292,15 @@ export default function LeaderboardPage() {
                       <span className={`flex-1 min-w-0 text-sm font-semibold truncate ${isCurrentUser ? 'text-amber-900 dark:text-amber-300' : 'text-slate-900 dark:text-slate-100'}`}>
                         {entry.displayName}
                         {isCurrentUser && <span className="text-amber-600 dark:text-amber-400 text-xs ml-1.5">(you)</span>}
+                        {entry.isPremium && (
+                          <span
+                            title="Premium member"
+                            className="ml-1.5 inline-flex items-center gap-0.5 align-middle rounded-full bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300"
+                          >
+                            <Crown className="w-2.5 h-2.5" />
+                            <span className="hidden sm:inline">Premium</span>
+                          </span>
+                        )}
                       </span>
 
                       <Badge variant="slate">LVL {entry.level}</Badge>

@@ -20,6 +20,7 @@ const decorate = (snapshot) =>
       levelName: getLevelName(data.xp || 0),
       rank: index + 1,
       isOnline,
+      isPremium: data.isPremium === true,
     };
   });
 
@@ -37,6 +38,7 @@ function localLeaderboard() {
       levelName: getLevelName(profile.xp || 0),
       rank: 1,
       isOnline: true,
+      isPremium: profile.isPremium === true,
     }];
   } catch {
     return [];

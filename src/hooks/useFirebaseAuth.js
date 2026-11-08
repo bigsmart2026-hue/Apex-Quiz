@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
   onAuthStateChanged,
+  getRedirectResult,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   signOut,
   signInWithEmailAndPassword,
@@ -10,6 +12,30 @@ import {
 } from 'firebase/auth';
 import { auth } from '../services/firebase.config';
 import useQuizStore from '../store/useQuizStore';
+import { getAuthErrorMessage, shouldUseRedirectFlow } from '../utils/authErrors';
+
+const POPUP_FALLBACK_CODES = new Set([
+  'auth/popup-blocked',
+  'auth/operation-not-supported-in-this-environment',
+  'auth/web-storage-unsupported',
+]);
+
+let redirectResultPromise = null;
+
+/** `getRedirectResult` may be called by several hook instances; share one call. */
+function resolveRedirectResult() {
+  if (!redirectResultPromise) redirectResultPromise = getRedirectResult(auth);
+  return redirectResultPromise;
+}
+
+function toAppUser(firebaseUser) {
+  return {
+    uid: firebaseUser.uid,
+    displayName: firebaseUser.displayName || 'User',
+    photoURL: firebaseUser.photoURL,
+    email: firebaseUser.email,
+  };
+}
 
 /**
  * Firebase Auth hook — manages real authentication state.
@@ -23,39 +49,62 @@ export function useFirebaseAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
+
+    resolveRedirectResult().catch((err) => {
+      if (!active) return;
+      const message = getAuthErrorMessage(err);
+      if (message) setAuthError(message);
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setLoading(false);
+      if (active) setLoading(false);
       if (firebaseUser) {
-        login({
-          uid: firebaseUser.uid,
-          displayName: firebaseUser.displayName || 'User',
-          photoURL: firebaseUser.photoURL,
-          email: firebaseUser.email,
-        });
+        login(toAppUser(firebaseUser));
       } else {
         logout();
       }
     });
-    return unsubscribe;
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, [login, logout]);
 
   const loginWithGoogle = async () => {
     setAuthError(null);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      if (shouldUseRedirectFlow()) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+      const cred = await signInWithPopup(auth, provider);
+      if (cred?.user) login(toAppUser(cred.user));
     } catch (err) {
-      setAuthError(err.message);
-      throw err;
+      let finalError = err;
+      if (POPUP_FALLBACK_CODES.has(err?.code)) {
+        try {
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectErr) {
+          finalError = redirectErr;
+        }
+      }
+      setAuthError(getAuthErrorMessage(finalError));
+      throw finalError;
     }
   };
 
   const loginWithEmail = async (email, password) => {
     setAuthError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      if (cred?.user) login(toAppUser(cred.user));
     } catch (err) {
-      setAuthError(err.message);
+      setAuthError(getAuthErrorMessage(err));
       throw err;
     }
   };
@@ -72,7 +121,7 @@ export function useFirebaseAuth() {
         email: cred.user.email,
       });
     } catch (err) {
-      setAuthError(err.message);
+      setAuthError(getAuthErrorMessage(err));
       throw err;
     }
   };

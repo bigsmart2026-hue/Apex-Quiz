@@ -40,7 +40,7 @@ export default function Logo({ size = 108, className = '', showWordmark = true, 
   }
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex items-center gap-2 sm:gap-3 ${className}`}>
       {animate ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.85 }}
@@ -52,7 +52,7 @@ export default function Logo({ size = 108, className = '', showWordmark = true, 
       ) : (
         Symbol
       )}
-      <span className="hidden sm:block font-heading text-4xl font-bold tracking-tight bg-gradient-to-b from-amber-500 to-amber-700 bg-clip-text text-transparent dark:from-amber-200 dark:to-amber-400">
+      <span className="whitespace-nowrap font-heading text-lg sm:text-4xl font-semibold tracking-tight bg-gradient-to-b from-[#FFE06A] via-[#F5B301] to-[#B26A00] bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(146,64,14,0.3)] dark:from-[#FFF0B3] dark:via-[#FFD24A] dark:to-[#D99A00] dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
         APEX QUIZ
       </span>
     </div>

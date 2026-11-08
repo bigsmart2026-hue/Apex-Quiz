@@ -146,6 +146,20 @@ export const updateLastSeen = (uid) => {
   return setDoc(ref, { lastSeen: serverTimestamp() }, { merge: true }).catch(() => {});
 };
 
+/**
+ * Mirrors the backend subscription tier onto the public Firestore profile so
+ * the leaderboard can show a premium marker. Cosmetic only — backend access
+ * checks remain the source of truth.
+ */
+export const syncPremiumStatus = async (uid, isPremium) => {
+  if (!db || !uid) return;
+  try {
+    await updateDoc(doc(db, USERS_COLLECTION, uid), { isPremium: Boolean(isPremium) });
+  } catch {
+    // Profile may not exist yet; the next app load will retry.
+  }
+};
+
 export const getOrCreateProfile = async (user) => {
   if (!db) {
     const stored = readLocalProfile();
