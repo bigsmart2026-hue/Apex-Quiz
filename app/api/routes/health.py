@@ -1,5 +1,6 @@
 """Health check API routes."""
 from fastapi import APIRouter
+from sqlalchemy import text
 from app.config.settings import get_settings
 
 
@@ -31,7 +32,7 @@ async def readiness_check():
     try:
         from app.models.session import engine
         async with engine.begin() as conn:
-            await conn.execute("SELECT 1")
+            await conn.execute(text("SELECT 1"))
         checks["database"] = "healthy"
     except Exception:
         checks["database"] = "unhealthy"
@@ -48,7 +49,7 @@ async def readiness_check():
     # Check Gemini
     try:
         from app.services.gemini_client import gemini_client
-        if gemini_client.api_key and gemini_client.flash_model:
+        if gemini_client.api_key and gemini_client.flash_model_name:
             checks["gemini"] = "configured"
         else:
             checks["gemini"] = "not_configured"
