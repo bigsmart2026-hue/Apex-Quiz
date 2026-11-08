@@ -1,4 +1,4 @@
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL_CACHE = `apex-quiz-shell-${VERSION}`;
 const ASSET_CACHE = `apex-quiz-assets-${VERSION}`;
 const OFFLINE_URL = '/index.html';
