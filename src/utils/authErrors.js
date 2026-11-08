@@ -5,7 +5,12 @@
 export function getAuthErrorMessage(err) {
   const code = err?.code || '';
 
-  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request' || code === 'auth/user-cancelled') {
+  if (
+    code === 'auth/popup-closed-by-user' ||
+    code === 'auth/cancelled-popup-request' ||
+    code === 'auth/user-cancelled' ||
+    code === 'auth/redirect-cancelled-by-user'
+  ) {
     return null;
   }
 
@@ -53,15 +58,19 @@ export function getAuthErrorMessage(err) {
 }
 
 /**
- * Use the redirect flow on touch/mobile browsers and installed PWAs, where
- * popups are frequently blocked or lose the Firebase session.
+ * Popups work on modern mobile browsers when started from a user gesture, and
+ * they avoid the third-party-storage problems that break redirect results.
+ * Only prefer redirect where popups are unavailable: installed PWAs and
+ * embedded in-app browsers.
  */
 export function shouldUseRedirectFlow() {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent || '';
-  const mobile = /Android|iPhone|iPad|iPod|Mobile|Opera Mini/i.test(ua);
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+
   const standalone =
-    typeof window !== 'undefined' &&
-    window.matchMedia?.('(display-mode: standalone)').matches;
-  return mobile || Boolean(standalone);
+    window.matchMedia?.('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+  if (standalone) return true;
+
+  const ua = navigator.userAgent || '';
+  return /FBAN|FBAV|FB_IAB|Instagram|Line\/|Twitter|MicroMessenger|LinkedInApp|Pinterest/i.test(ua);
 }

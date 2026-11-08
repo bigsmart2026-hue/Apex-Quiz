@@ -46,7 +46,6 @@ export default function LoginPage() {
     clearAuthError();
     try {
       await loginWithGoogle();
-      navigate(from, { replace: true });
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {

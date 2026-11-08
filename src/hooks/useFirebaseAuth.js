@@ -22,6 +22,32 @@ const POPUP_FALLBACK_CODES = new Set([
 
 let redirectResultPromise = null;
 
+const REDIRECT_PENDING_KEY = 'apex-quiz-auth-redirect';
+
+function markRedirectPending() {
+  try {
+    sessionStorage.setItem(REDIRECT_PENDING_KEY, '1');
+  } catch {
+    /* storage can be unavailable in private mode */
+  }
+}
+
+function readRedirectPending() {
+  try {
+    return sessionStorage.getItem(REDIRECT_PENDING_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function clearRedirectPending() {
+  try {
+    sessionStorage.removeItem(REDIRECT_PENDING_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 /** `getRedirectResult` may be called by several hook instances; share one call. */
 function resolveRedirectResult() {
   if (!redirectResultPromise) redirectResultPromise = getRedirectResult(auth);
@@ -51,15 +77,26 @@ export function useFirebaseAuth() {
   useEffect(() => {
     let active = true;
 
-    resolveRedirectResult().catch((err) => {
-      if (!active) return;
-      const message = getAuthErrorMessage(err);
-      if (message) setAuthError(message);
-    });
+    resolveRedirectResult()
+      .then((result) => {
+        if (!active) return;
+        const pending = readRedirectPending();
+        clearRedirectPending();
+        if (pending && !result && !auth.currentUser) {
+          setAuthError('Google sign-in did not complete. Please try again.');
+        }
+      })
+      .catch((err) => {
+        if (!active) return;
+        clearRedirectPending();
+        const message = getAuthErrorMessage(err);
+        if (message) setAuthError(message);
+      });
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (active) setLoading(false);
       if (firebaseUser) {
+        clearRedirectPending();
         login(toAppUser(firebaseUser));
       } else {
         logout();
@@ -78,6 +115,7 @@ export function useFirebaseAuth() {
 
     try {
       if (shouldUseRedirectFlow()) {
+        markRedirectPending();
         await signInWithRedirect(auth, provider);
         return;
       }

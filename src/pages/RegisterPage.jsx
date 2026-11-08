@@ -55,7 +55,6 @@ export default function RegisterPage() {
     clearAuthError();
     try {
       await loginWithGoogle();
-      navigate(from, { replace: true });
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {
