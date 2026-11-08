@@ -52,7 +52,7 @@ export default function Logo({ size = 108, className = '', showWordmark = true, 
       ) : (
         Symbol
       )}
-      <span className="whitespace-nowrap font-heading text-lg sm:text-4xl font-semibold tracking-tight bg-gradient-to-b from-[#FFE06A] via-[#F5B301] to-[#B26A00] bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(146,64,14,0.3)] dark:from-[#FFF0B3] dark:via-[#FFD24A] dark:to-[#D99A00] dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
+      <span className="whitespace-nowrap font-heading text-lg sm:text-3xl font-semibold tracking-tight bg-gradient-to-b from-[#FFE06A] via-[#F5B301] to-[#B26A00] bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(146,64,14,0.3)] dark:from-[#FFF0B3] dark:via-[#FFD24A] dark:to-[#D99A00] dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
         APEX QUIZ
       </span>
     </div>

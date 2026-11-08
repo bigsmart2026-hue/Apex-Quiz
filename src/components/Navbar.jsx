@@ -124,7 +124,7 @@ export default function Navbar({ showLeaderboard = true }) {
       <div className="w-full flex items-center justify-between gap-2 sm:gap-3">
         <Link to="/" onClick={closeMenus} aria-label="Apex Quiz home" className="flex-shrink-0">
           <Logo size={56} className="sm:hidden" animate />
-          <Logo size={108} className="hidden sm:flex" animate />
+          <Logo size={80} className="hidden sm:flex" animate />
         </Link>
 
         <div className="flex items-center gap-1.5 sm:gap-3">
